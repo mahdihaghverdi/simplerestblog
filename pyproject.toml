@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "simplerestblog"
+version = "0.1.0"
+description = ""
+authors = ["mahdihaghverdi <mahdihaghverdiliewpl@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["all"], version = "^0.109.0"}
+alembic = "^1.13.1"
+pyjwt = "^2.8.0"
+cryptography = "^42.0.1"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.25"}
+asyncpg = "^0.29.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+sqlalchemy-utils = "^0.41.1"
+urlpath = "^1.2.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+black = "^24.1.0"
+pytest = "^7.4.4"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
