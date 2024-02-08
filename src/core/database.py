@@ -7,9 +7,9 @@ AEngine = create_async_engine(settings.DATABASE_URL)
 ASession = async_sessionmaker(bind=AEngine, expire_on_commit=False)
 
 
-def get_db() -> AsyncSession:
+async def get_db() -> AsyncSession:
     db = ASession()
     try:
         yield db
     finally:
-        db.close()
+        await db.close()
