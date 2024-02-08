@@ -17,8 +17,3 @@ database:
     -p 5432:5432 \
     -v fastblog-data:/var/lib/postgresql/data \
      postgres
-
-revision message:
-  database_url='postgresql+asyncpg://postgres:postgres@0.0.0.0:5432' \
-  api_version='v1' \
-  alembic revision --autogenerate -m {{message}}
