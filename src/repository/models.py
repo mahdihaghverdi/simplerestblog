@@ -1,7 +1,7 @@
 import zoneinfo
 from datetime import datetime
 
-from sqlalchemy import Integer, BigInteger, String
+from sqlalchemy import Integer, BigInteger, String, DateTime
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -16,7 +16,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         primary_key=True,
         autoincrement=True,
     )
-    created: Mapped[datetime] = mapped_column(default=utcnow)
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class UserModel(Base):
