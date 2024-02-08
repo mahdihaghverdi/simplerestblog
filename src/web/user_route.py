@@ -6,6 +6,9 @@ from starlette import status
 
 from src.core.database import get_db
 from src.core.schemas import UserOutSchema, UserSignupSchema
+from src.repository.unitofwork import UnitOfWork
+from src.repository.user_repo import UserRepo
+from src.service.user_service import UserService
 
 router = APIRouter(prefix="/users")
 
@@ -19,4 +22,8 @@ async def signup(
     user_data: UserSignupSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    return user_data
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo)
+        user = await service.signup_user(user_data)
+    return user
