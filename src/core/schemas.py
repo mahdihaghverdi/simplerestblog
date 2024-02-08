@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, EmailStr, constr, AfterValidator
@@ -25,6 +26,10 @@ class _UserSchema(BaseModel):
 
 class UserSignupSchema(_UserSchema):
     password: constr(strip_whitespace=True, min_length=8)
+
+
+class UserSchema(UserSignupSchema):
+    created: datetime
 
 
 class UserOutSchema(_UserSchema):
