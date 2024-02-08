@@ -25,6 +25,10 @@ black = "^24.1.0"
 pytest = "^7.4.4"
 pytest-cov = "^4.1.0"
 
+[tool.black]
+line-length = 90
+target-version = ['py310']
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
