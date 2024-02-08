@@ -1,9 +1,8 @@
-from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: PostgresDsn | str
+    DATABASE_URL: str
 
 
 settings = Settings()
