@@ -17,3 +17,13 @@ database:
     -p 5432:5432 \
     -v fastblog-data:/var/lib/postgresql/data \
      postgres
+
+test:
+  database_url='sqlite+aiosqlite:///' \
+  api_version='v1' \
+  pytest --no-header tests -v
+
+test-with-cov:
+  database_url='sqlite+aiosqlite:///' \
+  api_version='v1' \
+  pytest --durations=10 --no-header --cov=src --cov-report=html --cov-report=term-missing tests -vv
