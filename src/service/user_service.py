@@ -14,6 +14,10 @@ class UserService(Service[UserRepo]):
         if user is None:
             raise DuplicateUsernameError(user_data.username)
         user.created = user.created.astimezone(ZoneInfo("Asia/Tehran"))
-        user.telegram = f"https://t.me/{user.telegram}"
-        user.twitter = f"https://x.com/@{user.twitter}"
+        if user.telegram is not None:
+            user.telegram = f"https://t.me/{user.telegram}"
+        if user.instagram is not None:
+            user.instagram = f"https://instagram.com/{user.instagram}"
+        if user.twitter is not None:
+            user.twitter = f"https://x.com/@{user.twitter}"
         return user
