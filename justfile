@@ -2,8 +2,6 @@
 
 
 run:
-  database_url='postgresql+asyncpg://postgres:postgres@0.0.0.0:5432' \
-  api_version='v1' \
   uvicorn src.web.app:app --reload
 
 database:
