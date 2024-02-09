@@ -4,12 +4,13 @@ from starlette.responses import JSONResponse
 
 from src.core.config import settings
 from src.core.exceptions import DuplicateUsernameError, UnAuthorizedError
+from src.web.auth import router as auth_router
 from src.web.user_route import router as user_router
 
 app = FastAPI(debug=True)
 
-PREFIX = f"/api/{settings.API_VERSION}"
-app.include_router(user_router, tags=["users"], prefix=PREFIX)
+app.include_router(user_router, tags=["users"], prefix=f"/api/{settings.API_VERSION}")
+app.include_router(auth_router, tags=["auth"], prefix=f"/api/{settings.API_VERSION}")
 
 
 @app.exception_handler(DuplicateUsernameError)

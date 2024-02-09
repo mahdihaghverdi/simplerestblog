@@ -1,10 +1,10 @@
+from src.core.config import settings
 from src.core.schemas import UserOutSchema
-from src.web.app import PREFIX
 
 
 def test_signup(client):
     response = client.post(
-        f"{PREFIX}/users/signup",
+        f"f'/api/{settings.API_VERSION}'/users/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     assert response.status_code == 201, response.text
@@ -29,7 +29,7 @@ def test_signup_with_data(client):
         "twitter": "mliewpl",
     }
 
-    response = client.post(f"{PREFIX}/users/signup", json=data)
+    response = client.post(f"api/{settings.API_VERSION}/users/signup", json=data)
     assert response.status_code == 201, response.text
 
     got = UserOutSchema(**response.json())
@@ -44,11 +44,11 @@ def test_signup_with_data(client):
 
 def test_signup_duplicate(client):
     client.post(
-        f"{PREFIX}/users/signup",
+        f"api/{settings.API_VERSION}/users/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     response = client.post(
-        f"{PREFIX}/users/signup",
+        f"api/{settings.API_VERSION}/users/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     assert response.status_code == 400, response.text
