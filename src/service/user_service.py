@@ -1,8 +1,27 @@
-from src.core.exceptions import DuplicateUsernameError
+from typing import Annotated
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.database import get_db
+from src.core.exceptions import DuplicateUsernameError, CredentialsException
 from src.core.schemas import UserSignupSchema, UserSchema
-from src.core.security import hash_password
+from src.core.security import hash_password, authenticate, oauth2_scheme
+from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service import Service
+
+
+async def get_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    token: Annotated[str, Depends(oauth2_scheme)],
+) -> UserSchema:
+    token_data = authenticate(token)
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo)
+        user = await service.get_user(token_data.username)
+    return user
 
 
 class UserService(Service[UserRepo]):
@@ -18,4 +37,16 @@ class UserService(Service[UserRepo]):
         user = await self.repo.add(user_data)
         if user is None:
             raise DuplicateUsernameError(user_data.username)
+        return user
+
+    async def authenticate(self, username: str, password: str) -> UserSchema:
+        user = await self.repo.auth(username, password)
+        if user is None:
+            raise CredentialsException()
+        return user
+
+    async def get_user(self, username: str):
+        user = await self.repo.get(username)
+        if user is None:
+            raise CredentialsException()
         return user
