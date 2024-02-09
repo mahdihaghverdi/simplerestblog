@@ -15,7 +15,7 @@ NoAtStr = Annotated[str, AfterValidator(remove_at_sign)]
 
 
 class _UserSchema(BaseModel):
-    username: str
+    username: constr(to_lower=True)
     name: str | None = None
     bio: str | None = None
     email: EmailStr | None = None
