@@ -36,3 +36,12 @@ class UserOutSchema(_UserSchema):
     telegram: str | None = None
     instagram: str | None = None
     twitter: str | None = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    username: str | None = None
