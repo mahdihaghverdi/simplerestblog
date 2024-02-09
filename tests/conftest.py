@@ -1,4 +1,5 @@
-import asyncio
+import os
+import subprocess
 
 import pytest
 from sqlalchemy import NullPool
@@ -7,10 +8,9 @@ from starlette.testclient import TestClient
 
 from src.core.config import settings
 from src.core.database import get_db
-from src.repository.models import Base
 from src.web.app import app
 
-AEngineMock = create_async_engine(str(settings.DATABASE_URL), poolclass=NullPool)
+AEngineMock = create_async_engine(str(settings.TEST_DATABASE_URL), poolclass=NullPool)
 ASessionMock = async_sessionmaker(
     bind=AEngineMock,
     expire_on_commit=False,
@@ -30,20 +30,12 @@ async def get_db_mock():
 app.dependency_overrides[get_db] = get_db_mock
 
 
-async def create():
-    async with AEngineMock.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def drop():
-    async with AEngineMock.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
 @pytest.fixture(scope="function")
-def client() -> TestClient:
-    asyncio.run(create())
+def client():
+    os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
+    subprocess.call(["alembic", "upgrade", "head"])
     try:
-        return TestClient(app)
+        yield TestClient(app=app)
     finally:
-        asyncio.run(drop())
+        os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
+        subprocess.call(["alembic", "downgrade", "base"])

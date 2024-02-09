@@ -18,12 +18,21 @@ database:
     -v fastblog-data:/var/lib/postgresql/data \
      postgres
 
+test-database:
+  docker run \
+    --name testdatabase \
+    --rm \
+    --detach \
+    --tmpfs=/data \
+    --env POSTGRES_USER=postgres \
+    --env POSTGRES_PASSWORD=postgres \
+    --env POSTGRES_DB=fastblog_db \
+    --env PGDATA=/data \
+    -p 5433:5432 \
+     postgres
+
 test:
-  database_url='sqlite+aiosqlite:///' \
-  api_version='v1' \
   pytest --no-header tests -v
 
 test-with-cov:
-  database_url='sqlite+aiosqlite:///' \
-  api_version='v1' \
   pytest --durations=10 --no-header --cov=src --cov-report=html --cov-report=term-missing tests -vv

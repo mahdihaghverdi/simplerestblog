@@ -33,3 +33,8 @@ class UserModel(Base):
     telegram: Mapped[str | None]
     instagram: Mapped[str | None]
     twitter: Mapped[str | None]
+
+
+# used to clean the test database
+# the order matters
+tables = [UserModel]
