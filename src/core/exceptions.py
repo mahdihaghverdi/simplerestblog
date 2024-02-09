@@ -4,3 +4,15 @@ class DuplicateUsernameError(Exception):
 
     def __str__(self):
         return self.message
+
+
+class UnAuthorizedError(Exception):
+    pass
+
+
+class UnAuthorizedLoginError(UnAuthorizedError):
+    pass
+
+
+class CredentialsException(UnAuthorizedError):
+    pass
