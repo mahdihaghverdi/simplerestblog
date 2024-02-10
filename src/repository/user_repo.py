@@ -42,7 +42,7 @@ class UserRepo(BaseRepo):
         if verify_password(password, raw_user["password"]):
             return UserSchema(**raw_user)
 
-    async def get(self, username) -> UserSchema:
+    async def get(self, username) -> UserSchema | None:
         stmt = self._select_all_columns().where(
             self.model.username == username,
         )

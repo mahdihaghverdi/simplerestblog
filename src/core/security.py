@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import jwt
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+from jwt import InvalidTokenError
 from passlib.context import CryptContext
 
 from src.core.config import settings
@@ -43,7 +43,7 @@ def decode_jwt(token) -> TokenData:
         if username is None:
             raise CredentialsException()
         return TokenData(username=username)
-    except JWTError:
+    except InvalidTokenError:
         raise CredentialsException()
 
 
