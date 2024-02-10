@@ -7,12 +7,12 @@ class DuplicateUsernameError(Exception):
 
 
 class UnAuthorizedError(Exception):
-    pass
+    message: str = "Unauthorized Access!"
 
 
-class UnAuthorizedLoginError(UnAuthorizedError):
-    pass
+class CredentialsError(UnAuthorizedError):
+    message = "Could not validate credentials"
 
 
-class CredentialsException(UnAuthorizedError):
-    pass
+class UnAuthorisedAccessError(UnAuthorizedError):
+    message = "Invalid access. You are not allowed to access this route"

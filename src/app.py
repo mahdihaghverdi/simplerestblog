@@ -22,9 +22,11 @@ async def duplicate_username_exception_handler(_, exc: DuplicateUsernameError):
 
 
 @app.exception_handler(UnAuthorizedError)
-async def unauthorized_exception_handle(*_):
+async def unauthorized_exception_handle(_, exc: UnAuthorizedError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    header = {"WWW-Authenticate": "Bearer"}
     return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": "Could not validate credentials"},
-        headers={"WWW-Authenticate": "Bearer"},
+        status_code=status_code,
+        content={"detail": exc.message},
+        headers=header,
     )
