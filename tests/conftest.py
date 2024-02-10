@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from src.core.config import settings
 from src.core.database import get_db
-from src.web.app import app
+from src.app import app
 
 AEngineMock = create_async_engine(str(settings.TEST_DATABASE_URL), poolclass=NullPool)
 ASessionMock = async_sessionmaker(

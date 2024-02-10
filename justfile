@@ -2,7 +2,7 @@
 
 
 run:
-  uvicorn src.web.app:app --reload
+  uvicorn src.app:app --reload
 
 database:
   docker run \
