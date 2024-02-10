@@ -3,7 +3,11 @@ from starlette import status
 from starlette.responses import JSONResponse
 
 from src.core.config import settings
-from src.core.exceptions import DuplicateUsernameError, UnAuthorizedError
+from src.core.exceptions import (
+    DuplicateUsernameError,
+    UnAuthorizedError,
+    ResourceNotFoundError,
+)
 from src.web.auth import router as auth_router
 from src.web.user_route import router as user_router
 
@@ -18,6 +22,14 @@ async def duplicate_username_exception_handler(_, exc: DuplicateUsernameError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": exc.__str__()},
+    )
+
+
+@app.exception_handler(ResourceNotFoundError)
+async def resource_not_found_exception_handler(_, exc: ResourceNotFoundError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": exc.message},
     )
 
 
