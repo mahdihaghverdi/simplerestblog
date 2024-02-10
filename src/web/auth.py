@@ -23,5 +23,7 @@ async def login_for_access_token(
         repo = UserRepo(db)
         service = UserService(repo)
         user = await service.authenticate(form_data.username, form_data.password)
-        access_token = create_access_token(TokenData(username=user.username))
+        access_token = create_access_token(
+            TokenData(username=user.username, role=user.role),
+        )
         return Token(access_token=access_token)
