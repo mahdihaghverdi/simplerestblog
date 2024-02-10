@@ -4,8 +4,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.core.enums import UserRolesEnum
 from src.core.exceptions import DuplicateUsernameError, CredentialsError
-from src.core.schemas import UserSchema, TokenData
+from src.core.schemas import UserSchema, TokenData, UserSignupSchema
 from src.core.security import hash_password, authenticate
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
@@ -24,7 +25,7 @@ async def get_user(
 
 
 class UserService(Service[UserRepo]):
-    async def signup_user(self, user_data: UserSchema) -> UserSchema:
+    async def signup_user(self, user_data: UserSignupSchema) -> UserSchema:
         user_data.password = hash_password(user_data.password)
         if user_data.telegram is not None:
             user_data.telegram = f"https://t.me/{user_data.telegram}"
@@ -33,7 +34,9 @@ class UserService(Service[UserRepo]):
         if user_data.twitter is not None:
             user_data.twitter = f"https://x.com/@{user_data.twitter}"
 
-        user = await self.repo.add(user_data)
+        user = user_data.model_dump()
+        user["role"] = UserRolesEnum.USER.value
+        user = await self.repo.add(user)
         if user is None:
             raise DuplicateUsernameError(user_data.username)
         return user

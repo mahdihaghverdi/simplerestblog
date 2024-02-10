@@ -1,7 +1,8 @@
 from sqlalchemy import insert, select, Select, RowMapping
 from sqlalchemy.exc import IntegrityError
 
-from src.core.schemas import UserSignupSchema, UserSchema
+from src.core.enums import UserRolesEnum
+from src.core.schemas import UserSchema
 from src.core.security import verify_password
 from src.repository import BaseRepo
 from src.repository.models import UserModel
@@ -10,13 +11,14 @@ from src.repository.models import UserModel
 class UserRepo(BaseRepo):
     model = UserModel
 
-    async def add(self, user: UserSignupSchema) -> UserSchema | None:
+    async def add(self, user: dict) -> UserSchema | None:
         stmt = (
             insert(self.model)
-            .values(**user.model_dump())
+            .values(**user)
             .returning(
                 self.model.username,
                 self.model.password,
+                self.model.role,
                 self.model.created,
                 self.model.name,
                 self.model.bio,
@@ -27,9 +29,14 @@ class UserRepo(BaseRepo):
             )
         )
         try:
-            raw_user = await self._mappings_fetchone(stmt)
+            raw_user = dict(**(await self._mappings_fetchone(stmt)))
         except IntegrityError:
             return None
+        match raw_user["role"]:
+            case UserRolesEnum.USER.value:
+                raw_user["role"] = UserRolesEnum.USER.value
+            case UserRolesEnum.ADMIN.value:
+                raw_user["role"] = UserRolesEnum.ADMIN.value
         return UserSchema(**raw_user)
 
     async def auth(self, username, password) -> UserSchema | None:
@@ -58,6 +65,7 @@ class UserRepo(BaseRepo):
         return select(
             self.model.username,
             self.model.password,
+            self.model.role,
             self.model.created,
             self.model.name,
             self.model.bio,
