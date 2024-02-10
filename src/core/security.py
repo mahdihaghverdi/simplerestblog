@@ -9,7 +9,7 @@ from jwt import InvalidTokenError
 from passlib.context import CryptContext
 
 from src.core.config import settings
-from src.core.exceptions import CredentialsException
+from src.core.exceptions import CredentialsError
 from src.core.schemas import TokenData
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -41,12 +41,15 @@ def create_access_token(data: TokenData) -> str:
 def decode_jwt(token) -> TokenData:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username = payload.get("username")
-        if username is None:
-            raise CredentialsException()
-        return TokenData(username=username)
     except InvalidTokenError:
-        raise CredentialsException()
+        raise CredentialsError()
+    else:
+        try:
+            username = payload["username"]
+            role = payload["role"]
+        except KeyError:
+            raise CredentialsError()
+    return TokenData(username=username, role=role)
 
 
 def authenticate(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
