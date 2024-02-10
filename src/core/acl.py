@@ -1,12 +1,14 @@
-from typing import Annotated, TypeAlias
 from collections.abc import Callable
+from typing import TypeAlias
 
-from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import PermissionGrantsEnum, RoutesEnum, UserRolesEnum
 from src.core.exceptions import UnAuthorisedAccessError
 from src.core.schemas import UserSchema
-from src.service.user_service import get_user
+from src.repository.unitofwork import UnitOfWork
+from src.repository.user_repo import UserRepo
+from src.service.user_service import UserService
 
 
 async def _is_allowed(*_, **__):
@@ -19,7 +21,7 @@ async def _not_allowed(*_, **__):
 
 async def _not_self_not_allowed(
     username: str,
-    requested_user: Annotated[UserSchema, Depends(get_user)],
+    requested_user: UserSchema,
 ) -> bool:
     if username == requested_user.username:
         return True
@@ -46,11 +48,18 @@ def get_permission_setting():
 
 
 async def _check_permission(
+    db: AsyncSession,
     user_role: UserRolesEnum,
     username: str,
+    requested_user: UserSchema,
     route: RoutesEnum,
     permission_setting: ACLSetting,
 ):
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo)
+        await service.get_user(username)
+
     not_allowed = _GRANT_MAPPER[PermissionGrantsEnum.NOT_ALLOWED]
     try:
         permission_for_endpoint = permission_setting[route]
@@ -59,7 +68,7 @@ async def _check_permission(
         await not_allowed()
     else:
         func = _GRANT_MAPPER[grant]
-        await func(username)
+        await func(username, requested_user)
 
 
 async def get_permission_callable() -> Callable:
