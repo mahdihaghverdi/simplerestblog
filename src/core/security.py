@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+from typing import Annotated
 from zoneinfo import ZoneInfo
 
 import jwt
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from passlib.context import CryptContext
@@ -47,6 +49,6 @@ def decode_jwt(token) -> TokenData:
         raise CredentialsException()
 
 
-def authenticate(token: str) -> TokenData:
+def authenticate(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
     token_data = decode_jwt(token)
     return token_data

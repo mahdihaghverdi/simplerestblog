@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.exceptions import DuplicateUsernameError, CredentialsException
-from src.core.schemas import UserSignupSchema, UserSchema
-from src.core.security import hash_password, authenticate, oauth2_scheme
+from src.core.schemas import UserSignupSchema, UserSchema, TokenData
+from src.core.security import hash_password, authenticate
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service import Service
@@ -14,9 +14,8 @@ from src.service import Service
 
 async def get_user(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token_data: Annotated[TokenData, Depends(authenticate)],
 ) -> UserSchema:
-    token_data = authenticate(token)
     async with UnitOfWork(db):
         repo = UserRepo(db)
         service = UserService(repo)
