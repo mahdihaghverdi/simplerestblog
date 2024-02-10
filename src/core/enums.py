@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class StrEnum(str, Enum):
@@ -6,15 +6,15 @@ class StrEnum(str, Enum):
 
 
 class RoutesEnum(StrEnum):
-    GET_BY_USERNAME = auto()
+    GET_BY_USERNAME = "GET_BY_USERNAME"
 
 
 class UserRolesEnum(StrEnum):
-    ADMIN = auto()
-    USER = auto()
+    ADMIN = "ADMIN"
+    USER = "USER"
 
 
 class PermissionGrantsEnum(StrEnum):
-    IS_ALLOWED = auto()
-    NOT_ALLOWED = auto()
-    NOT_SELF_NOT_ALLOWED = auto()
+    IS_ALLOWED = "IS_ALLOWED"
+    NOT_ALLOWED = "NOT_ALLOWED"
+    NOT_SELF_NOT_ALLOWED = "NOT_SELF_NOT_ALLOWED"
