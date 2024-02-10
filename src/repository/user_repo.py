@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, Select, RowMapping
+from sqlalchemy import insert, select, Select
 from sqlalchemy.exc import IntegrityError
 
 from src.core.enums import UserRolesEnum
@@ -29,14 +29,9 @@ class UserRepo(BaseRepo):
             )
         )
         try:
-            raw_user = dict(**(await self._mappings_fetchone(stmt)))
+            raw_user = await self._mappings_fetchone(stmt)
         except IntegrityError:
             return None
-        match raw_user["role"]:
-            case UserRolesEnum.USER.value:
-                raw_user["role"] = UserRolesEnum.USER.value
-            case UserRolesEnum.ADMIN.value:
-                raw_user["role"] = UserRolesEnum.ADMIN.value
         return UserSchema(**raw_user)
 
     async def auth(self, username, password) -> UserSchema | None:
@@ -57,9 +52,16 @@ class UserRepo(BaseRepo):
         if raw_user is not None:
             return UserSchema(**raw_user)
 
-    async def _mappings_fetchone(self, stmt) -> RowMapping | None:
+    async def _mappings_fetchone(self, stmt) -> dict | None:
         raw_user = (await self.session.execute(stmt)).mappings().fetchone()
-        return raw_user
+        if raw_user is not None:
+            raw_user = dict(**raw_user)
+            match raw_user["role"]:
+                case UserRolesEnum.USER.value:
+                    raw_user["role"] = UserRolesEnum.USER
+                case UserRolesEnum.ADMIN.value:
+                    raw_user["role"] = UserRolesEnum.ADMIN
+            return dict(**raw_user)
 
     def _select_all_columns(self) -> Select:
         return select(
