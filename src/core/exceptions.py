@@ -1,3 +1,12 @@
+class ResourceNotFoundError(Exception):
+    message: str
+
+
+class UserNotFoundError(ResourceNotFoundError):
+    def __init__(self, username):
+        self.message = f"User {username!r} is not found!"
+
+
 class DuplicateUsernameError(Exception):
     def __init__(self, username):
         self.message = f"username: {username!r} already exists!"
