@@ -1,11 +1,15 @@
 from typing import Annotated
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from src.core.acl import get_permission_setting, get_permission_callable, ACLSetting
 from src.core.database import get_db
-from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema
+from src.core.enums import RoutesEnum
+from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema, TokenData
+from src.core.security import authenticate
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService, get_user
@@ -32,3 +36,26 @@ async def signup(
 @router.get("/me", response_model=UserOutSchema, status_code=status.HTTP_200_OK)
 async def me(user: Annotated[UserSchema, Depends(get_user)]):
     return user
+
+
+@router.get("/{username}", response_model=UserOutSchema, status_code=status.HTTP_200_OK)
+async def get_by_username(
+    username: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    requested_user: Annotated[UserSchema, Depends(get_user)],
+    token: Annotated[TokenData, Depends(authenticate)],
+    permission_callable: Annotated[Callable, Depends(get_permission_callable)],
+    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
+):
+    await permission_callable(
+        db=db,
+        user_role=token.role,
+        username=username,
+        requested_user=requested_user,
+        route=RoutesEnum.GET_BY_USERNAME,
+        permission_setting=permission_setting,
+    )
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo)
+        return await service.get_user(username)
