@@ -22,7 +22,7 @@ def hash_password(password: str) -> str:
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"/api/{settings.API_VERSION}/auth/access-token",
+    tokenUrl=f"{settings.PREFIX}/auth/access-token",
 )
 
 
