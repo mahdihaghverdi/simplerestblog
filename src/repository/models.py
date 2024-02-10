@@ -25,6 +25,7 @@ class UserModel(Base):
     # credentials
     username: Mapped[str] = mapped_column(String(32), unique=True)
     password: Mapped[str]
+    role: Mapped[str]
 
     # profile
     name: Mapped[str | None] = mapped_column(String(32))
