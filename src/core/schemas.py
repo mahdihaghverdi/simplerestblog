@@ -3,6 +3,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, EmailStr, constr, AfterValidator
 
+from src.core.enums import UserRolesEnum
+
 
 def remove_at_sign(str_id: str) -> str:
     # add @ if it is not present
@@ -30,6 +32,7 @@ class UserSignupSchema(_UserSchema):
 
 class UserSchema(UserSignupSchema):
     created: datetime
+    role: UserRolesEnum
 
 
 class UserOutSchema(_UserSchema):
@@ -44,4 +47,5 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
+    role: str | None = None
     username: str | None = None
