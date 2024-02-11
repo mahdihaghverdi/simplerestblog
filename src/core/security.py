@@ -44,11 +44,13 @@ def decode_jwt(token) -> TokenData:
     except InvalidTokenError:
         raise CredentialsError()
     else:
-        try:
-            username = payload["username"]
-            role = payload["role"]
-        except KeyError:
+        username = payload.get("username")
+        role = payload.get("role")
+        if username is None:
             raise CredentialsError()
+        if role is None:
+            raise CredentialsError()
+
     return TokenData(username=username, role=role)
 
 
