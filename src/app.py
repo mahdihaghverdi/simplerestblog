@@ -9,7 +9,7 @@ from src.core.exceptions import (
     ResourceNotFoundError,
 )
 from src.web.auth import router as auth_router
-from src.web.user_route import router as user_router
+from src.web.users import router as user_router
 
 app = FastAPI(debug=True)
 
