@@ -59,7 +59,6 @@ def admin_access_token():
 
 @pytest.fixture(scope="function")
 def client():
-    # TODO: use the session to create them all
     os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
     subprocess.call(["alembic", "upgrade", "head"])
     try:
