@@ -53,6 +53,7 @@ def test_signup_duplicate(client):
         json={"username": "Mahdi", "password": "12345678"},
     )
     assert response.status_code == 400, response.text
+    assert "mahdi" in response.json()["detail"]
 
 
 class TestAuth:
@@ -102,18 +103,18 @@ class TestAuth:
         response = client.get(f"{settings.PREFIX}/users/me")
         assert response.status_code == 401, response.text
 
-    def test_bad_token_someone_else_username(self, client):
+    def test_bad_token_username_none(self, client):
         client.post(f"{settings.PREFIX}/users/signup", json=self.data)
-        access_token = create_access_token(TokenData(username="mahdi"))
+        access_token = create_access_token(TokenData(username=None))
         response = client.get(
             f"{settings.PREFIX}/users/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 401, response.text
 
-    def test_bad_token_username_none(self, client):
+    def test_bad_token_role_none(self, client):
         client.post(f"{settings.PREFIX}/users/signup", json=self.data)
-        access_token = create_access_token(TokenData(username=None))
+        access_token = create_access_token(TokenData(username="mahdi", role=None))
         response = client.get(
             f"{settings.PREFIX}/users/me",
             headers={"Authorization": f"Bearer {access_token}"},
