@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from typing import TypeAlias
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,11 +46,11 @@ def get_permission_setting():
     return _ACL_MAPPER
 
 
-async def _check_permission(
+async def check_permission(
     db: AsyncSession,
     user_role: UserRolesEnum,
     username: str,
-    requested_user: UserSchema,
+    user: UserSchema,
     route: RoutesEnum,
     permission_setting: ACLSetting,
 ):
@@ -68,8 +67,4 @@ async def _check_permission(
         await not_allowed()
     else:
         func = _GRANT_MAPPER[grant]
-        await func(username, requested_user)
-
-
-async def get_permission_callable() -> Callable:
-    return _check_permission
+        await func(username, user)

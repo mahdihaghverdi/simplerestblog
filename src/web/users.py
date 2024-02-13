@@ -1,11 +1,10 @@
 from typing import Annotated
-from collections.abc import Callable
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.core.acl import get_permission_setting, get_permission_callable, ACLSetting
+from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
 from src.core.enums import RoutesEnum
 from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema, TokenData
@@ -42,16 +41,15 @@ async def me(user: Annotated[UserSchema, Depends(get_user)]):
 async def get_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    requested_user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(authenticate)],
-    permission_callable: Annotated[Callable, Depends(get_permission_callable)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
-    await permission_callable(
+    await check_permission(
         db=db,
         user_role=token.role,
         username=username,
-        requested_user=requested_user,
+        user=user,
         route=RoutesEnum.GET_BY_USERNAME,
         permission_setting=permission_setting,
     )

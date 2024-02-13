@@ -47,7 +47,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    role: str | None = None
+    role: UserRolesEnum | None = None
     username: str | None = None
 
 
