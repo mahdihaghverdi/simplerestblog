@@ -52,11 +52,13 @@ class TokenData(BaseModel):
 
 
 class LittleDraftSchema(BaseModel):
+    id: int
     title: str
     updated: datetime
 
 
 class DraftSchema(BaseModel):
+    id: str
     title: str
     body: str
     created: datetime
