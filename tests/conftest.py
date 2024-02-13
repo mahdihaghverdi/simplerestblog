@@ -57,6 +57,11 @@ def admin_access_token():
     )
 
 
+@pytest.fixture
+def admin_auth_headers(admin_access_token):
+    return {"Authorization": f"Bearer {admin_access_token}"}
+
+
 @pytest.fixture(scope="function")
 def client():
     os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
