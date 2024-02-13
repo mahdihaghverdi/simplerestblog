@@ -36,28 +36,16 @@ _GRANT_MAPPER = {
 
 ACLSetting: TypeAlias = dict[RoutesEnum, dict[UserRolesEnum, PermissionGrantsEnum]]
 _ACL_MAPPER: ACLSetting = {
-    RoutesEnum.GET_BY_USERNAME: {
+    RoutesEnum.GET_USER_BY_USERNAME: {
         UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
         UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
     },
-    RoutesEnum.GET_ALL_DRAFTS: {
+    RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME: {
         UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
         UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
     },
-    RoutesEnum.GET_ONE_DRAFT: {
+    RoutesEnum.GET_ONE_DRAFT_BY_USERNAME: {
         UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
-        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
-    },
-    RoutesEnum.CREATE_DRAFT: {
-        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
-        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
-    },
-    RoutesEnum.UPDATE_DRAFT: {
-        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
-        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
-    },
-    RoutesEnum.DELETE_DRAFT: {
-        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
         UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
     },
 }

@@ -50,7 +50,7 @@ async def get_by_username(
         user_role=token.role,
         username=username,
         user=user,
-        route=RoutesEnum.GET_BY_USERNAME,
+        route=RoutesEnum.GET_USER_BY_USERNAME,
         permission_setting=permission_setting,
     )
     async with UnitOfWork(db):
