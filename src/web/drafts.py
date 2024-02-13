@@ -16,9 +16,12 @@ from src.core.schemas import (
     UpdateDraftSchema,
 )
 from src.core.security import validate_token
+from src.repository.draft_repo import DraftRepo
+from src.repository.unitofwork import UnitOfWork
+from src.service.draft_service import DraftService
 from src.service.user_service import get_user
 
-router = APIRouter(prefix="drafts", tags=["drafts"])
+router = APIRouter(prefix="/drafts", tags=["drafts"])
 
 
 @router.post("/", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
@@ -26,10 +29,12 @@ async def create_draft(
     draft: CreateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
-    pass
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        draft = await service.create_draft(user.username, draft)
+    return draft
 
 
 @router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)

@@ -9,12 +9,14 @@ from src.core.exceptions import (
     ResourceNotFoundError,
 )
 from src.web.auth import router as auth_router
+from src.web.drafts import router as draft_router
 from src.web.users import router as user_router
 
 app = FastAPI(debug=True)
 
 app.include_router(user_router, tags=["users"], prefix=settings.PREFIX)
 app.include_router(auth_router, tags=["auth"], prefix=settings.PREFIX)
+app.include_router(draft_router, tags=["drafts"], prefix=settings.PREFIX)
 
 
 @app.exception_handler(DuplicateUsernameError)

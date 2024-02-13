@@ -58,11 +58,11 @@ class LittleDraftSchema(BaseModel):
 
 
 class DraftSchema(BaseModel):
-    id: str
+    id: int
     title: str
     body: str
     created: datetime
-    updated: datetime
+    updated: datetime | None
     username: str
 
 

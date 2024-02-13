@@ -29,7 +29,7 @@ class UserRepo(BaseRepo):
             )
         )
         try:
-            raw_user = await self._mappings_fetchone(stmt)
+            raw_user = await self.execute_mappings_fetchone(stmt)
         except IntegrityError:
             return None
         return UserSchema(**raw_user)
@@ -38,7 +38,7 @@ class UserRepo(BaseRepo):
         stmt = self._select_all_columns().where(
             self.model.username == username,
         )
-        raw_user = await self._mappings_fetchone(stmt)
+        raw_user = await self.execute_mappings_fetchone(stmt)
         if raw_user is None:
             return
         if verify_password(password, raw_user["password"]):
@@ -48,14 +48,13 @@ class UserRepo(BaseRepo):
         stmt = self._select_all_columns().where(
             self.model.username == username,
         )
-        raw_user = await self._mappings_fetchone(stmt)
+        raw_user = await self.execute_mappings_fetchone(stmt)
         if raw_user is not None:
             return UserSchema(**raw_user)
 
-    async def _mappings_fetchone(self, stmt) -> dict | None:
-        raw_user = (await self.session.execute(stmt)).mappings().fetchone()
+    async def execute_mappings_fetchone(self, stmt) -> dict | None:
+        raw_user = await super().execute_mappings_fetchone(stmt)
         if raw_user is not None:
-            raw_user = dict(**raw_user)
             match raw_user["role"]:
                 case UserRolesEnum.USER.value:
                     raw_user["role"] = UserRolesEnum.USER
