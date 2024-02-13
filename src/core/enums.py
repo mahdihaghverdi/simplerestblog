@@ -7,6 +7,11 @@ class StrEnum(str, Enum):
 
 class RoutesEnum(StrEnum):
     GET_BY_USERNAME = "GET_BY_USERNAME"
+    CREATE_DRAFT = "CREATE_DRAFT"
+    GET_ALL_DRAFTS = "GET_ALL_DRAFTS"
+    GET_ONE_DRAFT = "GET_ONE_DRAFT"
+    UPDATE_DRAFT = "UPDATE_DRAFT"
+    DELETE_DRAFT = "DELETE_DRAFT"
 
 
 class UserRolesEnum(StrEnum):
