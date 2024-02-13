@@ -22,6 +22,7 @@ async def _not_self_not_allowed(
     username: str,
     requested_user: UserSchema,
 ) -> bool:
+    """Allow if the user is requested for him/herself resource"""
     if username == requested_user.username:
         return True
     raise UnAuthorisedAccessError()
@@ -37,6 +38,26 @@ ACLSetting: TypeAlias = dict[RoutesEnum, dict[UserRolesEnum, PermissionGrantsEnu
 _ACL_MAPPER: ACLSetting = {
     RoutesEnum.GET_BY_USERNAME: {
         UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.GET_ALL_DRAFTS: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.GET_ONE_DRAFT: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.CREATE_DRAFT: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.UPDATE_DRAFT: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.DELETE_DRAFT: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
         UserRolesEnum.USER: PermissionGrantsEnum.NOT_SELF_NOT_ALLOWED,
     },
 }
