@@ -62,6 +62,33 @@ def admin_auth_headers(admin_access_token):
     return {"Authorization": f"Bearer {admin_access_token}"}
 
 
+@pytest.fixture
+def create_mahdi():
+    async def _():
+        async with ASessionMock() as session:
+            async with session.begin():
+                stmt = insert(UserModel).values(
+                    username="mahdi",
+                    password=hash_password("1"),
+                    role="USER",
+                )
+                await session.execute(stmt)
+
+    asyncio.run(_())
+
+
+@pytest.fixture
+def mahdi_access_token():
+    return create_access_token(
+        TokenData(username="mahdi", role=UserRolesEnum.USER),
+    )
+
+
+@pytest.fixture
+def mahdi_auth_headers(mahdi_access_token):
+    return {"Authorization": f"Bearer {mahdi_access_token}"}
+
+
 @pytest.fixture(scope="function")
 def client():
     os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
