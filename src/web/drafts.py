@@ -37,12 +37,51 @@ async def create_draft(
     return draft
 
 
-@router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)
-async def get_all_drafts(
+@router.get("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
+async def get_one_draft(
+    draft_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+):
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        draft = await service.get_one(draft_id, user.username)
+    return draft
+
+
+@router.get(
+    "/{username}/{draft_id}",
+    response_model=DraftSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_one_draft_by_username(
+    username: str,
+    draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
+):
+    await check_permission(
+        db,
+        token.role,
+        username,
+        user,
+        RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
+        permission_setting,
+    )
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        draft = await service.get_one(draft_id, username)
+    return draft
+
+
+@router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)
+async def get_all_drafts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
 ):
     pass
 
@@ -69,59 +108,21 @@ async def get_all_drafts_by_username(
     )
 
 
-@router.get("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
-async def get_one_draft(
-    draft_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
-):
-    pass
-
-
-@router.get(
-    "/{username}/{draft_id}",
-    response_model=DraftSchema,
-    status_code=status.HTTP_200_OK,
-)
-async def get_one_draft_by_username(
-    username: str,
-    draft_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
-):
-    await check_permission(
-        db,
-        token.role,
-        username,
-        user,
-        RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
-        permission_setting,
-    )
-
-
 @router.put("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
 async def update_draft(
     draft_id: int,
     draft: UpdateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     pass
 
 
-@router.get("/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_draft(
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     pass
 

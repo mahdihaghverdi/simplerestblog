@@ -30,7 +30,7 @@ async def duplicate_username_exception_handler(_, exc: DuplicateUsernameError):
 @app.exception_handler(ResourceNotFoundError)
 async def resource_not_found_exception_handler(_, exc: ResourceNotFoundError):
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_404_NOT_FOUND,
         content={"detail": exc.message},
     )
 
