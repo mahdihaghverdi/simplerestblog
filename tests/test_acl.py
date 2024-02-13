@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 
 from src.core.config import settings
-from src.core.enums import UserRolesEnum
-from src.core.schemas import TokenData
-from src.core.security import create_access_token
 
 draft_data = {"title": "title", "body": "body"}
 
@@ -30,7 +27,6 @@ class PermissionABC(ABC):
         pass
 
 
-# TODO: speedup the tests using the fixtures
 class TestGetByUsername(PermissionABC):
     def test_not_found(self, client, create_admin, admin_auth_headers):
         response = client.get(
@@ -49,11 +45,13 @@ class TestGetByUsername(PermissionABC):
         data = response.json()
         assert data["username"] == "admin"
 
-    def test_admin_request_another(self, client, create_admin, admin_auth_headers):
-        client.post(
-            f"{settings.PREFIX}/users/signup",
-            json={"username": "mahdi", "password": "12345678"},
-        )
+    def test_admin_request_another(
+        self,
+        client,
+        create_admin,
+        admin_auth_headers,
+        create_mahdi,
+    ):
         response = client.get(
             f"{settings.PREFIX}/users/mahdi",
             headers=admin_auth_headers,
@@ -63,36 +61,26 @@ class TestGetByUsername(PermissionABC):
         data = response.json()
         assert data["username"] == "mahdi"
 
-    def test_user_requests_itself(self, client):
-        client.post(
-            f"{settings.PREFIX}/users/signup",
-            json={"username": "mahdi", "password": "12345678"},
-        )
-        access_token = create_access_token(
-            TokenData(username="mahdi", role=UserRolesEnum.USER),
-        )
-
+    def test_user_requests_itself(self, client, create_mahdi, mahdi_auth_headers):
         response = client.get(
             f"{settings.PREFIX}/users/mahdi",
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers=mahdi_auth_headers,
         )
         assert response.status_code == 200, response.text
 
         data = response.json()
         assert data["username"] == "mahdi"
 
-    def test_user_requests_another(self, client):
-        client.post(
-            f"{settings.PREFIX}/users/signup",
-            json={"username": "mahdi", "password": "12345678"},
-        )
-        access_token = create_access_token(
-            TokenData(username="mahdi", role=UserRolesEnum.USER),
-        )
-
+    def test_user_requests_another(
+        self,
+        client,
+        create_admin,
+        create_mahdi,
+        mahdi_auth_headers,
+    ):
         response = client.get(
             f"{settings.PREFIX}/users/admin",
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers=mahdi_auth_headers,
         )
         assert response.status_code == 401, response.text
 
@@ -172,9 +160,8 @@ class TestGetOneDraft(PermissionABC):
         create_mahdi,
         mahdi_auth_headers,
     ):
-        draft_id = create_draft(client, admin_auth_headers)
         response = client.get(
-            self.username_path.format(username="admin", draft_id=draft_id),
+            self.username_path.format(username="admin", draft_id=1),
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 401, response.text
