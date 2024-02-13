@@ -49,3 +49,26 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     role: str | None = None
     username: str | None = None
+
+
+class LittleDraftSchema(BaseModel):
+    title: str
+    updated: datetime
+
+
+class DraftSchema(BaseModel):
+    title: str
+    body: str
+    created: datetime
+    updated: datetime
+    username: str
+
+
+class CreateDraftSchema(BaseModel):
+    title: str
+    body: str
+
+
+class UpdateDraftSchema(BaseModel):
+    title: str
+    body: str
