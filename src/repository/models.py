@@ -1,9 +1,9 @@
 import zoneinfo
 from datetime import datetime
 
-from sqlalchemy import Integer, BigInteger, String, DateTime
+from sqlalchemy import Integer, BigInteger, String, DateTime, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def utcnow():
@@ -35,7 +35,26 @@ class UserModel(Base):
     instagram: Mapped[str | None]
     twitter: Mapped[str | None]
 
+    # relations
+    drafts: Mapped[list["DraftModel"]] = relationship(
+        back_populates="user",
+        cascade="delete, delete-orphan",
+    )
 
-# used to clean the test database
-# the order matters
-tables = [UserModel]
+    def __repr__(self):
+        return f"<User: {self.username!r}>"
+
+
+class DraftModel(Base):
+    __tablename__ = "drafts"
+
+    title: Mapped[str]
+    body: Mapped[str]
+    updated: Mapped[datetime | None]
+
+    # relation
+    username: Mapped[str] = mapped_column(ForeignKey("users.username"))
+    user: Mapped["UserModel"] = relationship(back_populates="drafts")
+
+    def __repr__(self):
+        return f"<Draft: {self.title!r}>"
