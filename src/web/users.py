@@ -8,7 +8,7 @@ from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
 from src.core.enums import RoutesEnum
 from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema, TokenData
-from src.core.security import authenticate
+from src.core.security import validate_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService, get_user
@@ -42,7 +42,7 @@ async def get_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(authenticate)],
+    token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

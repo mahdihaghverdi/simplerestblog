@@ -11,7 +11,7 @@ from src.core.exceptions import (
     UserNotFoundError,
 )
 from src.core.schemas import UserSchema, TokenData, UserSignupSchema
-from src.core.security import hash_password, authenticate
+from src.core.security import hash_password, validate_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service import Service
@@ -19,7 +19,7 @@ from src.service import Service
 
 async def get_user(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_data: Annotated[TokenData, Depends(authenticate)],
+    token_data: Annotated[TokenData, Depends(validate_token)],
 ) -> UserSchema:
     async with UnitOfWork(db):
         repo = UserRepo(db)

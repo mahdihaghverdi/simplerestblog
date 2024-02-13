@@ -54,6 +54,6 @@ def decode_jwt(token) -> TokenData:
     return TokenData(username=username, role=role)
 
 
-def authenticate(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
+def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
     token_data = decode_jwt(token)
     return token_data
