@@ -24,7 +24,7 @@ from src.service.user_service import get_user
 router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 
 
-@router.post("/", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
 async def create_draft(
     draft: CreateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -37,7 +37,11 @@ async def create_draft(
     return draft
 
 
-@router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)
+@router.get(
+    "/all",
+    response_model=list[LittleDraftSchema],
+    status_code=status.HTTP_200_OK,
+)
 async def get_all_drafts(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
@@ -50,7 +54,7 @@ async def get_all_drafts(
 
 
 @router.get(
-    "/{username}",
+    "/all/{username}",
     response_model=list[LittleDraftSchema],
     status_code=status.HTTP_200_OK,
 )

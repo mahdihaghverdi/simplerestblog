@@ -3,7 +3,7 @@ from src.core.config import settings
 
 def test_create_draft(client, create_admin, admin_auth_headers):
     response = client.post(
-        f"{settings.PREFIX}/drafts",
+        f"{settings.PREFIX}/drafts/create",
         json={"title": "title", "body": "body"},
         headers=admin_auth_headers,
     )
