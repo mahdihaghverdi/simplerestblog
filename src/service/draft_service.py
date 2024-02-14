@@ -1,7 +1,12 @@
 from src.core.config import settings
 from src.core.enums import APIPrefixesEnum, APIMethodsEnum
 from src.core.exceptions import DraftNotFoundError
-from src.core.schemas import DraftSchema, CreateDraftSchema, LittleDraftSchema
+from src.core.schemas import (
+    DraftSchema,
+    CreateDraftSchema,
+    LittleDraftSchema,
+    UpdateDraftSchema,
+)
 from src.repository.draft_repo import DraftRepo
 from src.service import Service
 
@@ -25,3 +30,13 @@ class DraftService(Service[DraftRepo]):
         for draft in drafts:
             draft.link = (APIMethodsEnum.GET, get_url.format(draft.id))
         return drafts
+
+    async def update_draft(
+        self,
+        draft_id: int,
+        draft: UpdateDraftSchema,
+        username: str,
+    ) -> DraftSchema:
+        draft = await self.repo.update(draft_id, draft.model_dump(), username)
+        if draft is not None:
+            return draft

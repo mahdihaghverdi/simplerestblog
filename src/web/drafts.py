@@ -130,7 +130,11 @@ async def update_draft(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
 ):
-    pass
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        draft = await service.update_draft(draft_id, draft, user.username)
+    return draft
 
 
 @router.delete("/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
