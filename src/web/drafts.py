@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -45,11 +45,12 @@ async def create_draft(
 async def get_all_drafts(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
+    desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
         service = DraftService(repo)
-        drafts = await service.get_all(user.username)
+        drafts = await service.get_all(user.username, desc_order)
     return drafts
 
 
@@ -64,6 +65,7 @@ async def get_all_drafts_by_username(
     user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
+    desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
     await check_permission(
         db,
@@ -76,7 +78,7 @@ async def get_all_drafts_by_username(
     async with UnitOfWork(db):
         repo = DraftRepo(db)
         service = DraftService(repo)
-        drafts = await service.get_all(username)
+        drafts = await service.get_all(username, desc_order)
     return drafts
 
 

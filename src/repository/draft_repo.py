@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, Select
+from sqlalchemy import insert, select, Select, desc
 
 from src.core.schemas import DraftSchema, LittleDraftSchema
 from src.repository import BaseRepo
@@ -45,7 +45,7 @@ class DraftRepo(BaseRepo):
             self.model.username,
         )
 
-    async def get_all(self, username) -> list[LittleDraftSchema]:
+    async def get_all(self, username: str, desc_order: bool) -> list[LittleDraftSchema]:
         stmt = (
             select(
                 self.model.id,
@@ -54,6 +54,9 @@ class DraftRepo(BaseRepo):
             )
             .join(UserModel)
             .where(self.model.username == username)
+            .order_by(
+                desc(self.model.created) if desc_order else self.model.created,
+            )
         )
         raw_drafts = await self._execute_mappings_fetchall(stmt)
         return [LittleDraftSchema(**draft, link=None) for draft in raw_drafts]

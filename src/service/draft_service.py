@@ -19,8 +19,8 @@ class DraftService(Service[DraftRepo]):
             raise DraftNotFoundError(draft_id)
         return draft
 
-    async def get_all(self, username: str) -> list[LittleDraftSchema]:
-        drafts = await self.repo.get_all(username)
+    async def get_all(self, username: str, desc_order: bool) -> list[LittleDraftSchema]:
+        drafts = await self.repo.get_all(username, desc_order)
         get_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/" + "{}"
         for draft in drafts:
             draft.link = (APIMethodsEnum.GET, get_url.format(draft.id))
