@@ -5,13 +5,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.core.enums import APIPrefixesEnum
 from src.core.schemas import Token, TokenData
 from src.core.security import create_access_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix=f"/{APIPrefixesEnum.AUTH.value}")
 
 
 @router.post("/access-token", response_model=Token)

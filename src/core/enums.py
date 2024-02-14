@@ -11,6 +11,12 @@ class RoutesEnum(StrEnum):
     GET_ONE_DRAFT_BY_USERNAME = "GET_ONE_DRAFT_BY_USERNAME"
 
 
+class APIPrefixesEnum(StrEnum):
+    AUTH = "auth"
+    USERS = "users"
+    DRAFTS = "drafts"
+
+
 class UserRolesEnum(StrEnum):
     ADMIN = "ADMIN"
     USER = "USER"

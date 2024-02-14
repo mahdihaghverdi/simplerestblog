@@ -6,14 +6,14 @@ from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
-from src.core.enums import RoutesEnum
+from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema, TokenData
 from src.core.security import validate_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService, get_user
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix=f"/{APIPrefixesEnum.USERS.value}")
 
 
 @router.post(
