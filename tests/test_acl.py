@@ -7,10 +7,6 @@ draft_data = {"title": "title", "body": "body"}
 
 class PermissionABC(ABC):
     @abstractmethod
-    def test_not_found(self, *args):
-        pass
-
-    @abstractmethod
     def test_admin_request_itself(self, *args):
         pass
 
@@ -28,14 +24,14 @@ class PermissionABC(ABC):
 
 
 class TestGetByUsername(PermissionABC):
-    def test_not_found(self, client, create_admin, admin_auth_headers):
+    def test_not_found(self, client, admin_auth_headers):
         response = client.get(
             f"{settings.PREFIX}/users/mahdi",
             headers=admin_auth_headers,
         )
         assert response.status_code == 404, response.text
 
-    def test_admin_request_itself(self, client, create_admin, admin_auth_headers):
+    def test_admin_request_itself(self, client, admin_auth_headers):
         response = client.get(
             f"{settings.PREFIX}/users/admin",
             headers=admin_auth_headers,
@@ -48,7 +44,6 @@ class TestGetByUsername(PermissionABC):
     def test_admin_request_another(
         self,
         client,
-        create_admin,
         admin_auth_headers,
         create_mahdi,
     ):
@@ -61,7 +56,7 @@ class TestGetByUsername(PermissionABC):
         data = response.json()
         assert data["username"] == "mahdi"
 
-    def test_user_requests_itself(self, client, create_mahdi, mahdi_auth_headers):
+    def test_user_requests_itself(self, client, mahdi_auth_headers):
         response = client.get(
             f"{settings.PREFIX}/users/mahdi",
             headers=mahdi_auth_headers,
@@ -87,7 +82,7 @@ class TestGetByUsername(PermissionABC):
 
 def create_draft(client, headers):
     draft_id = client.post(
-        f"{settings.PREFIX}/drafts",
+        f"{settings.PREFIX}/drafts/create",
         json=draft_data,
         headers=headers,
     ).json()["id"]
@@ -98,14 +93,14 @@ class TestGetOneDraft(PermissionABC):
     basic_path: str = f"{settings.PREFIX}/drafts/" + "{draft_id}"
     username_path: str = f"{settings.PREFIX}/drafts/" + "{username}/{draft_id}"
 
-    def test_not_found(self, client, create_admin, admin_auth_headers):
+    def test_not_found(self, client, admin_auth_headers):
         response = client.get(
             f"{settings.PREFIX}/drafts/1",
             headers=admin_auth_headers,
         )
         assert response.status_code == 404, response.text
 
-    def test_admin_request_itself(self, client, create_admin, admin_auth_headers):
+    def test_admin_request_itself(self, client, admin_auth_headers):
         draft_id = create_draft(client, admin_auth_headers)
 
         response = client.get(
@@ -122,9 +117,7 @@ class TestGetOneDraft(PermissionABC):
     def test_admin_request_another(
         self,
         client,
-        create_admin,
         admin_auth_headers,
-        create_mahdi,
         mahdi_auth_headers,
     ):
         draft_id = create_draft(client, mahdi_auth_headers)
@@ -139,7 +132,7 @@ class TestGetOneDraft(PermissionABC):
         assert data["body"] == draft_data["body"]
         assert data["username"] == "mahdi"
 
-    def test_user_requests_itself(self, client, create_mahdi, mahdi_auth_headers):
+    def test_user_requests_itself(self, client, mahdi_auth_headers):
         draft_id = create_draft(client, mahdi_auth_headers)
         response = client.get(
             self.basic_path.format(draft_id=draft_id),
@@ -156,8 +149,6 @@ class TestGetOneDraft(PermissionABC):
         self,
         client,
         create_admin,
-        admin_auth_headers,
-        create_mahdi,
         mahdi_auth_headers,
     ):
         response = client.get(
@@ -165,3 +156,17 @@ class TestGetOneDraft(PermissionABC):
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 401, response.text
+
+
+class TestGetAllDrafts(PermissionABC):
+    def test_admin_request_itself(self, *args):
+        pass
+
+    def test_admin_request_another(self, *args):
+        pass
+
+    def test_user_requests_itself(self, *args):
+        pass
+
+    def test_user_requests_another(self, *args):
+        pass

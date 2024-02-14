@@ -51,7 +51,7 @@ def create_admin():
 
 
 @pytest.fixture
-def admin_access_token():
+def admin_access_token(create_admin):
     return create_access_token(
         TokenData(username="admin", role=UserRolesEnum.ADMIN),
     )
@@ -78,7 +78,7 @@ def create_mahdi():
 
 
 @pytest.fixture
-def mahdi_access_token():
+def mahdi_access_token(create_mahdi):
     return create_access_token(
         TokenData(username="mahdi", role=UserRolesEnum.USER),
     )
