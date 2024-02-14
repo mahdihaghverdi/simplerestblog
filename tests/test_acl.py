@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from src.core.config import settings
+from src.core.enums import APIPrefixesEnum
 
 draft_data = {"title": "title", "body": "body"}
 
@@ -159,14 +160,33 @@ class TestGetOneDraft(PermissionABC):
 
 
 class TestGetAllDrafts(PermissionABC):
-    def test_admin_request_itself(self, *args):
-        pass
+    def test_admin_request_itself(self, client, admin_auth_headers):
+        response = client.get(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/admin",
+            headers=admin_auth_headers,
+        )
+        assert response.status_code == 200, response.text
+        assert not response.json()
 
-    def test_admin_request_another(self, *args):
-        pass
+    def test_admin_request_another(self, client, admin_auth_headers, create_mahdi):
+        response = client.get(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/mahdi",
+            headers=admin_auth_headers,
+        )
+        assert response.status_code == 200, response.text
+        assert not response.json()
 
-    def test_user_requests_itself(self, *args):
-        pass
+    def test_user_requests_itself(self, client, mahdi_auth_headers):
+        response = client.get(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/mahdi",
+            headers=mahdi_auth_headers,
+        )
+        assert response.status_code == 200, response.text
+        assert not response.json()
 
-    def test_user_requests_another(self, *args):
-        pass
+    def test_user_requests_another(self, client, create_admin, mahdi_auth_headers):
+        response = client.get(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/admin",
+            headers=mahdi_auth_headers,
+        )
+        assert response.status_code == 401, response.text
