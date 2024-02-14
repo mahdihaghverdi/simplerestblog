@@ -26,3 +26,10 @@ class PermissionGrantsEnum(StrEnum):
     IS_ALLOWED = "IS_ALLOWED"
     NOT_ALLOWED = "NOT_ALLOWED"
     NOT_SELF_NOT_ALLOWED = "NOT_SELF_NOT_ALLOWED"
+
+
+class APIMethodsEnum(StrEnum):
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"

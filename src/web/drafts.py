@@ -6,7 +6,7 @@ from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
-from src.core.enums import RoutesEnum
+from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     LittleDraftSchema,
     UserSchema,
@@ -21,7 +21,7 @@ from src.repository.unitofwork import UnitOfWork
 from src.service.draft_service import DraftService
 from src.service.user_service import get_user
 
-router = APIRouter(prefix="/drafts", tags=["drafts"])
+router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 
 
 @router.post("/", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
@@ -83,7 +83,11 @@ async def get_all_drafts(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
 ):
-    pass
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        drafts = await service.get_all(user.username)
+    return drafts
 
 
 @router.get(

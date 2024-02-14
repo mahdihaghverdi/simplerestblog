@@ -1,6 +1,6 @@
 from sqlalchemy import insert, select, Select
 
-from src.core.schemas import DraftSchema
+from src.core.schemas import DraftSchema, LittleDraftSchema
 from src.repository import BaseRepo
 from src.repository.models import DraftModel, UserModel
 
@@ -44,3 +44,20 @@ class DraftRepo(BaseRepo):
             self.model.updated,
             self.model.username,
         )
+
+    async def get_all(self, username) -> list[LittleDraftSchema]:
+        stmt = (
+            select(
+                self.model.id,
+                self.model.title,
+                self.model.updated,
+            )
+            .join(UserModel)
+            .where(self.model.username == username)
+        )
+        raw_drafts = await self._execute_mappings_fetchall(stmt)
+        return [LittleDraftSchema(**draft, link=None) for draft in raw_drafts]
+
+    async def _execute_mappings_fetchall(self, stmt) -> list[dict]:
+        drafts = (await self.session.execute(stmt)).mappings().fetchall()
+        return [dict(**draft) for draft in drafts]

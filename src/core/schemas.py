@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, TypeAlias
 
 from pydantic import BaseModel, EmailStr, constr, AfterValidator
 
-from src.core.enums import UserRolesEnum
+from src.core.enums import UserRolesEnum, APIMethodsEnum
 
 
 def remove_at_sign(str_id: str) -> str:
@@ -51,10 +51,14 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
+LinkTupleType: TypeAlias = tuple[APIMethodsEnum, str] | None
+
+
 class LittleDraftSchema(BaseModel):
     id: int
     title: str
-    updated: datetime
+    updated: datetime | None
+    link: LinkTupleType
 
 
 class DraftSchema(BaseModel):
