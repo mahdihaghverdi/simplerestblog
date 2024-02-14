@@ -37,6 +37,45 @@ async def create_draft(
     return draft
 
 
+@router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)
+async def get_all_drafts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+):
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        drafts = await service.get_all(user.username)
+    return drafts
+
+
+@router.get(
+    "/{username}",
+    response_model=list[LittleDraftSchema],
+    status_code=status.HTTP_200_OK,
+)
+async def get_all_drafts_by_username(
+    username: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+    token: Annotated[TokenData, Depends(validate_token)],
+    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
+):
+    await check_permission(
+        db,
+        token.role,
+        username,
+        user,
+        RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
+        permission_setting,
+    )
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        drafts = await service.get_all(username)
+    return drafts
+
+
 @router.get("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
 async def get_one_draft(
     draft_id: int,
@@ -76,40 +115,6 @@ async def get_one_draft_by_username(
         service = DraftService(repo)
         draft = await service.get_one(draft_id, username)
     return draft
-
-
-@router.get("/", response_model=list[LittleDraftSchema], status_code=status.HTTP_200_OK)
-async def get_all_drafts(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
-):
-    async with UnitOfWork(db):
-        repo = DraftRepo(db)
-        service = DraftService(repo)
-        drafts = await service.get_all(user.username)
-    return drafts
-
-
-@router.get(
-    "/{username}",
-    response_model=list[LittleDraftSchema],
-    status_code=status.HTTP_200_OK,
-)
-async def get_all_drafts_by_username(
-    username: str,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
-    token: Annotated[TokenData, Depends(validate_token)],
-    permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
-):
-    await check_permission(
-        db,
-        token.role,
-        username,
-        user,
-        RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
-        permission_setting,
-    )
 
 
 @router.put("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
