@@ -51,6 +51,7 @@ class DraftModel(Base):
     title: Mapped[str]
     body: Mapped[str]
     updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    tmplink: Mapped[str]
 
     # relation
     username: Mapped[str] = mapped_column(ForeignKey("users.username"))
