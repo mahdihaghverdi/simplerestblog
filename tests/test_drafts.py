@@ -109,3 +109,19 @@ def test_delete_draft_not_found(client, mahdi_auth_headers):
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 404, response.text
+
+
+def test_open_read(client, mahdi_auth_headers):
+    tmplink = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["tmplink"]
+
+    response = client.get(tmplink)
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["title"] == "title"
+    assert data["body"] == "body"
+    assert data["username"] == "mahdi"

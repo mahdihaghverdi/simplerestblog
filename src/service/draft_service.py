@@ -26,7 +26,7 @@ class DraftService(Service[DraftRepo]):
         raw_draft["tmplink"] = tmplink_hash(username)
         draft = await self.repo.add(raw_draft)
         draft.tmplink = (
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/open-read/{username}-"
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/open-read/@{username}/"
             + "{}"
         ).format(draft.tmplink)
         return draft

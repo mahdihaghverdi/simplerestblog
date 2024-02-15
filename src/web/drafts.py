@@ -164,6 +164,3 @@ async def open_read(
         service = DraftService(repo)
         draft = await service.get_global(username, link)
     return draft
-
-
-# publish route will be written after considerations
