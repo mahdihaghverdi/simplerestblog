@@ -22,6 +22,7 @@ class DraftRepo(BaseRepo):
                 self.model.body,
                 self.model.updated,
                 self.model.username,
+                self.model.tmplink,
             )
         )
         draft = await self.execute_mappings_fetchone(stmt)
@@ -46,6 +47,7 @@ class DraftRepo(BaseRepo):
             self.model.body,
             self.model.updated,
             self.model.username,
+            self.model.tmplink,
         )
 
     async def get_all(self, username: str, desc_order: bool) -> list[LittleDraftSchema]:
@@ -98,3 +100,14 @@ class DraftRepo(BaseRepo):
             return False
         await self.session.delete(record)
         return True
+
+    async def get_by_link(self, username: str, link: str) -> DraftSchema:
+        stmt = (
+            self._select_all_columns()
+            .join(UserModel)
+            .where(self.model.username == username)
+            .where(self.model.tmplink == link)
+        )
+        draft = await self.execute_mappings_fetchone(stmt)
+        if draft is not None:
+            return DraftSchema(**draft)

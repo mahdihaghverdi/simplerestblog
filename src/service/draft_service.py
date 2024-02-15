@@ -1,6 +1,9 @@
+import hashlib
+from datetime import datetime
+
 from src.core.config import settings
 from src.core.enums import APIPrefixesEnum, APIMethodsEnum
-from src.core.exceptions import DraftNotFoundError
+from src.core.exceptions import DraftNotFoundError, ResourceNotFoundError
 from src.core.schemas import (
     DraftSchema,
     CreateDraftSchema,
@@ -11,11 +14,21 @@ from src.repository.draft_repo import DraftRepo
 from src.service import Service
 
 
+def tmplink_hash(username) -> str:
+    to_hash = f"{datetime.now().isoformat()}-{username}".encode()
+    return hashlib.sha256(to_hash).hexdigest()[:16]
+
+
 class DraftService(Service[DraftRepo]):
     async def create_draft(self, username: str, draft: CreateDraftSchema) -> DraftSchema:
         raw_draft = draft.model_dump()
         raw_draft["username"] = username
+        raw_draft["tmplink"] = tmplink_hash(username)
         draft = await self.repo.add(raw_draft)
+        draft.tmplink = (
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/open-read/{username}-"
+            + "{}"
+        ).format(draft.tmplink)
         return draft
 
     async def get_one(self, draft_id: int, username: str) -> DraftSchema:
@@ -45,3 +58,9 @@ class DraftService(Service[DraftRepo]):
     async def delete_draft(self, draft_id: int, username: str) -> None:
         if not (await self.repo.delete(draft_id, username)):
             raise DraftNotFoundError(draft_id)
+
+    async def get_global(self, username: str, link: str) -> DraftSchema:
+        draft = await self.repo.get_by_link(username, link)
+        if draft is not None:
+            return draft
+        raise ResourceNotFoundError("Draft is not Found!")

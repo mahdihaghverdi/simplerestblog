@@ -149,4 +149,21 @@ async def delete_draft(
         await service.delete_draft(draft_id, user.username)
 
 
+@router.get(
+    "/open-read/@{username}/{link}",
+    response_model=DraftSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def open_read(
+    username: str,
+    link: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        draft = await service.get_global(username, link)
+    return draft
+
+
 # publish route will be written after considerations
