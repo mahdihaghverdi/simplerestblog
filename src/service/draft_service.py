@@ -14,7 +14,7 @@ from src.repository.draft_repo import DraftRepo
 from src.service import Service
 
 
-def tmplink_hash(username) -> str:
+def draft_hash(username) -> str:
     to_hash = f"{datetime.now().isoformat()}-{username}".encode()
     return hashlib.sha256(to_hash).hexdigest()[:16]
 
@@ -23,12 +23,12 @@ class DraftService(Service[DraftRepo]):
     async def create_draft(self, username: str, draft: CreateDraftSchema) -> DraftSchema:
         raw_draft = draft.model_dump()
         raw_draft["username"] = username
-        raw_draft["tmplink"] = tmplink_hash(username)
+        raw_draft["draft_hash"] = draft_hash(username)
         draft = await self.repo.add(raw_draft)
-        draft.tmplink = (
+        draft.draft_hash = (
             f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/open-read/@{username}/"
             + "{}"
-        ).format(draft.tmplink)
+        ).format(draft.draft_hash)
         return draft
 
     async def get_one(self, draft_id: int, username: str) -> DraftSchema:

@@ -112,13 +112,13 @@ def test_delete_draft_not_found(client, mahdi_auth_headers):
 
 
 def test_open_read(client, mahdi_auth_headers):
-    tmplink = client.post(
+    draft_hash = client.post(
         f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
-    ).json()["tmplink"]
+    ).json()["draft_hash"]
 
-    response = client.get(tmplink)
+    response = client.get(draft_hash)
     assert response.status_code == 200, response.text
 
     data = response.json()

@@ -51,10 +51,12 @@ class DraftModel(Base):
     title: Mapped[str]
     body: Mapped[str]
     updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    tmplink: Mapped[str]
+    draft_hash: Mapped[str]
 
     # relation
-    username: Mapped[str] = mapped_column(ForeignKey("users.username"))
+    username: Mapped[str] = mapped_column(
+        ForeignKey(f"{UserModel.__tablename__}.username"),
+    )
     user: Mapped["UserModel"] = relationship(back_populates="drafts")
 
     def __repr__(self):

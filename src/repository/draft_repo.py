@@ -22,7 +22,7 @@ class DraftRepo(BaseRepo):
                 self.model.body,
                 self.model.updated,
                 self.model.username,
-                self.model.tmplink,
+                self.model.draft_hash,
             )
         )
         draft = await self.execute_mappings_fetchone(stmt)
@@ -47,7 +47,7 @@ class DraftRepo(BaseRepo):
             self.model.body,
             self.model.updated,
             self.model.username,
-            self.model.tmplink,
+            self.model.draft_hash,
         )
 
     async def get_all(self, username: str, desc_order: bool) -> list[LittleDraftSchema]:
@@ -106,7 +106,7 @@ class DraftRepo(BaseRepo):
             self._select_all_columns()
             .join(UserModel)
             .where(self.model.username == username)
-            .where(self.model.tmplink == link)
+            .where(self.model.draft_hash == link)
         )
         draft = await self.execute_mappings_fetchone(stmt)
         if draft is not None:

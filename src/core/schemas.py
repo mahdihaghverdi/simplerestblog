@@ -68,7 +68,7 @@ class DraftSchema(BaseModel):
     created: datetime
     updated: datetime | None
     username: str
-    tmplink: str
+    draft_hash: str
 
 
 class CreateDraftSchema(BaseModel):
