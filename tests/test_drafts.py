@@ -87,3 +87,25 @@ def test_update_draft_not_found(client, mahdi_auth_headers):
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 404, response.text
+
+
+def test_delete_draft(client, mahdi_auth_headers):
+    draft_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+
+    response = client.delete(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{draft_id}",
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 204, response.text
+
+
+def test_delete_draft_not_found(client, mahdi_auth_headers):
+    response = client.delete(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/1",
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 404, response.text
