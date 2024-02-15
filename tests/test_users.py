@@ -155,7 +155,7 @@ class TestAuth:
         assert response.status_code == 401, response.text
 
 
-def test_users_me(client, create_admin, admin_access_token):
+def test_users_me(client, admin_access_token):
     response = client.get(
         f"{settings.PREFIX}/users/me",
         headers={"Authorization": f"Bearer {admin_access_token}"},

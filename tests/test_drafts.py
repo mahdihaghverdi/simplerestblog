@@ -2,7 +2,7 @@ from src.core.config import settings
 from src.core.enums import APIPrefixesEnum
 
 
-def test_create_draft(client, create_admin, admin_auth_headers):
+def test_create_draft(client, admin_auth_headers):
     response = client.post(
         f"{settings.PREFIX}/drafts/create",
         json={"title": "title", "body": "body"},
@@ -16,7 +16,7 @@ def test_create_draft(client, create_admin, admin_auth_headers):
     assert data["username"] == "admin"
 
 
-def test_get_one_draft(client, create_mahdi, mahdi_auth_headers):
+def test_get_one_draft(client, mahdi_auth_headers):
     draft_id = client.post(
         f"{settings.PREFIX}/drafts/create",
         json={"title": "title", "body": "body"},
@@ -35,7 +35,7 @@ def test_get_one_draft(client, create_mahdi, mahdi_auth_headers):
     assert data["username"] == "mahdi"
 
 
-def test_get_all_drafts(client, create_mahdi, mahdi_auth_headers):
+def test_get_all_drafts(client, mahdi_auth_headers):
     def _():
         return client.post(
             f"{settings.PREFIX}/drafts/create",
@@ -58,3 +58,32 @@ def test_get_all_drafts(client, create_mahdi, mahdi_auth_headers):
             "GET",
             f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{id_}",
         ]
+
+
+def test_update_draft(client, mahdi_auth_headers):
+    draft_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+
+    response = client.put(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{draft_id}",
+        json={"title": "updated title", "body": "updated body"},
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["title"] == "updated title"
+    assert data["body"] == "updated body"
+    assert data["updated"] is not None
+
+
+def test_update_draft_not_found(client, mahdi_auth_headers):
+    response = client.put(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/1",
+        json={"title": "updated title", "body": "updated body"},
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 404, response.text
