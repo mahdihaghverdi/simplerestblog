@@ -40,3 +40,8 @@ class DraftService(Service[DraftRepo]):
         draft = await self.repo.update(draft_id, draft.model_dump(), username)
         if draft is not None:
             return draft
+        raise DraftNotFoundError(draft_id)
+
+    async def delete_draft(self, draft_id: int, username: str) -> None:
+        if not (await self.repo.delete(draft_id, username)):
+            raise DraftNotFoundError(draft_id)

@@ -86,3 +86,15 @@ class DraftRepo(BaseRepo):
     async def _execute_mappings_fetchall(self, stmt) -> list[dict]:
         drafts = (await self.session.execute(stmt)).mappings().fetchall()
         return [dict(**draft) for draft in drafts]
+
+    async def delete(self, draft_id: int, username: str) -> bool:
+        stmt = (
+            select(self.model)
+            .where(self.model.username == username)
+            .where(self.model.id == draft_id)
+        )
+        record = (await self.session.execute(stmt)).scalar_one_or_none()
+        if record is None:
+            return False
+        await self.session.delete(record)
+        return True

@@ -143,7 +143,10 @@ async def delete_draft(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[UserSchema, Depends(get_user)],
 ):
-    pass
+    async with UnitOfWork(db):
+        repo = DraftRepo(db)
+        service = DraftService(repo)
+        await service.delete_draft(draft_id, user.username)
 
 
 # publish route will be written after considerations
