@@ -82,9 +82,13 @@ class UpdateDraftSchema(BaseModel):
     body: str
 
 
+def _slugify(slug) -> str:
+    return slugify.slugify(slug)
+
+
 Slug = Annotated[
     constr(strip_whitespace=True, to_lower=True, min_length=1),
-    AfterValidator(slugify.slugify),
+    AfterValidator(_slugify),
 ]
 
 
@@ -100,8 +104,8 @@ class PublishDraftSchema(BaseModel):
 class PostSchema(BaseModel):
     title: str
     body: str
-    username: str
     draft_hash: str
+    username: str
     slug: str
     tags: set[str]
     published: datetime
