@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Annotated, TypeAlias
 
-from pydantic import BaseModel, EmailStr, constr, AfterValidator
+import slugify
+from pydantic import BaseModel, EmailStr, constr, AfterValidator, conset
 
 from src.core.enums import UserRolesEnum, APIMethodsEnum
 
@@ -79,3 +80,28 @@ class CreateDraftSchema(BaseModel):
 class UpdateDraftSchema(BaseModel):
     title: str
     body: str
+
+
+Slug = Annotated[
+    constr(strip_whitespace=True, to_lower=True, min_length=1),
+    AfterValidator(slugify.slugify),
+]
+
+
+class PublishDraftSchema(BaseModel):
+    tags: conset(
+        constr(strip_whitespace=True, to_lower=True, min_length=1),
+        min_length=1,
+        max_length=5,
+    )
+    slug: Slug
+
+
+class PostSchema(BaseModel):
+    title: str
+    body: str
+    username: str
+    draft_hash: str
+    slug: str
+    tags: set[str]
+    published: datetime
