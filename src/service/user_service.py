@@ -5,11 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.enums import UserRolesEnum
-from src.core.exceptions import (
-    DuplicateUsernameError,
-    CredentialsError,
-    UserNotFoundError,
-)
 from src.core.schemas import UserSchema, TokenData, UserSignupSchema
 from src.core.security import hash_password, validate_token
 from src.repository.unitofwork import UnitOfWork
@@ -40,19 +35,10 @@ class UserService(Service[UserRepo]):
 
         user = user_data.model_dump()
         user["role"] = UserRolesEnum.USER.value
-        user = await self.repo.add(user)
-        if user is None:
-            raise DuplicateUsernameError(user_data.username)
-        return user
+        return await self.repo.add(user)
 
     async def authenticate(self, username: str, password: str) -> UserSchema:
-        user = await self.repo.auth(username, password)
-        if user is None:
-            raise CredentialsError()
-        return user
+        return await self.repo.auth(username, password)
 
     async def get_user(self, username: str):
-        user = await self.repo.get(username)
-        if user is None:
-            raise UserNotFoundError(username)
-        return user
+        return await self.repo.get(username)

@@ -2,6 +2,11 @@ from sqlalchemy import insert, select, Select
 from sqlalchemy.exc import IntegrityError
 
 from src.core.enums import UserRolesEnum
+from src.core.exceptions import (
+    UserNotFoundError,
+    CredentialsError,
+    DuplicateUsernameError,
+)
 from src.core.schemas import UserSchema
 from src.core.security import verify_password
 from src.repository import BaseRepo
@@ -31,18 +36,20 @@ class UserRepo(BaseRepo):
         try:
             raw_user = await self.execute_mappings_fetchone(stmt)
         except IntegrityError:
-            return None
-        return UserSchema(**raw_user)
+            DuplicateUsernameError(user["username"])
+        else:
+            return UserSchema(**raw_user)
 
-    async def auth(self, username, password) -> UserSchema | None:
+    async def auth(self, username, password) -> UserSchema:
         stmt = self._select_all_columns().where(
             self.model.username == username,
         )
         raw_user = await self.execute_mappings_fetchone(stmt)
         if raw_user is None:
-            return
+            raise UserNotFoundError(username=username)
         if verify_password(password, raw_user["password"]):
             return UserSchema(**raw_user)
+        raise CredentialsError()
 
     async def get(self, username) -> UserSchema | None:
         stmt = self._select_all_columns().where(
@@ -51,6 +58,7 @@ class UserRepo(BaseRepo):
         raw_user = await self.execute_mappings_fetchone(stmt)
         if raw_user is not None:
             return UserSchema(**raw_user)
+        raise UserNotFoundError(username)
 
     async def execute_mappings_fetchone(self, stmt) -> dict | None:
         raw_user = await super().execute_mappings_fetchone(stmt)
