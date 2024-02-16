@@ -111,7 +111,7 @@ class TagModel(Base):
     tag: Mapped[str] = mapped_column(unique=True)
 
     def __repr__(self):
-        return f"<TagModel: name={self.tag!r}>"
+        return f"<TagModel: tag={self.tag!r}>"
 
 
 association_table = Table(
