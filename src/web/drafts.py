@@ -14,11 +14,15 @@ from src.core.schemas import (
     DraftSchema,
     CreateDraftSchema,
     UpdateDraftSchema,
+    PostSchema,
+    PublishDraftSchema,
 )
 from src.core.security import validate_token
 from src.repository.draft_repo import DraftRepo
+from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.draft_service import DraftService
+from src.service.post_service import PostService
 from src.service.user_service import get_user
 
 router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
@@ -164,3 +168,21 @@ async def open_read(
         service = DraftService(repo)
         draft = await service.get_global(username, link)
     return draft
+
+
+@router.post(
+    "/publish/{draft_id}",
+    response_model=PostSchema,
+    status_code=status.HTTP_201_CREATED,
+)
+async def publish_draft(
+    draft_id: int,
+    post: PublishDraftSchema,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+):
+    async with UnitOfWork(db):
+        repo = PostRepo(db)
+        service = PostService(repo)
+        post = await service.create_post(draft_id, post, user.username)
+    return post
