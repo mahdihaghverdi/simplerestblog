@@ -140,6 +140,7 @@ class CommentModel(Base):
     )
 
     # relations
+    user: Mapped["UserModel"] = relationship(back_populates="comments")
     post: Mapped["PostModel"] = relationship(back_populates="comments")
     children: Mapped[list["CommentModel"]] = relationship(
         cascade="delete, delete-orphan",
