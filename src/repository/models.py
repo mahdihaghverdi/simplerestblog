@@ -61,6 +61,7 @@ class DraftModel(Base):
     body: Mapped[str]
     updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     draft_hash: Mapped[str]
+    is_published: Mapped[bool] = mapped_column(default=lambda: False)
 
     # FK
     username: Mapped[str] = mapped_column(
@@ -87,7 +88,9 @@ class PostModel(Base):
     # FK
     draft_id: Mapped[int] = mapped_column(
         ForeignKey(f"{DraftModel.__tablename__}.id"),
+        unique=True,
     )
+    # TODO: raises exc -> draft is published before
     username: Mapped[str] = mapped_column(
         ForeignKey(f"{UserModel.__tablename__}.username"),
     )
