@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy import insert, select, Select, desc, update
 
+from src.core.exceptions import DraftNotFoundError, ResourceNotFoundError
 from src.core.schemas import DraftSchema, LittleDraftSchema
 from src.repository import BaseRepo
 from src.repository.models import DraftModel, UserModel
@@ -11,7 +12,7 @@ from src.repository.models import DraftModel, UserModel
 class DraftRepo(BaseRepo):
     model = DraftModel
 
-    async def add(self, draft: dict) -> DraftSchema | None:
+    async def add(self, draft: dict) -> DraftSchema:
         stmt = (
             insert(self.model)
             .values(**draft)
@@ -38,6 +39,7 @@ class DraftRepo(BaseRepo):
         raw_draft = await self.execute_mappings_fetchone(stmt)
         if raw_draft is not None:
             return DraftSchema(**raw_draft)
+        raise DraftNotFoundError(draft_id=draft_id)
 
     def _select_all_columns(self) -> Select:
         return select(
@@ -84,12 +86,13 @@ class DraftRepo(BaseRepo):
         draft = await self.execute_mappings_fetchone(stmt)
         if draft is not None:
             return DraftSchema(**draft)
+        raise DraftNotFoundError(draft_id=draft_id)
 
     async def _execute_mappings_fetchall(self, stmt) -> list[dict]:
         drafts = (await self.session.execute(stmt)).mappings().fetchall()
         return [dict(**draft) for draft in drafts]
 
-    async def delete(self, draft_id: int, username: str) -> bool:
+    async def delete(self, draft_id: int, username: str) -> None:
         stmt = (
             select(self.model)
             .where(self.model.username == username)
@@ -97,9 +100,8 @@ class DraftRepo(BaseRepo):
         )
         record = (await self.session.execute(stmt)).scalar_one_or_none()
         if record is None:
-            return False
+            raise DraftNotFoundError(draft_id)
         await self.session.delete(record)
-        return True
 
     async def get_by_link(self, username: str, link: str) -> DraftSchema:
         stmt = (
@@ -111,3 +113,4 @@ class DraftRepo(BaseRepo):
         draft = await self.execute_mappings_fetchone(stmt)
         if draft is not None:
             return DraftSchema(**draft)
+        raise ResourceNotFoundError("Draft is not Found!")
