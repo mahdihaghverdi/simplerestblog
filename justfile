@@ -29,6 +29,9 @@ test-database:
     -p 5433:5432 \
      postgres
 
+ltree:
+  docker exec -it testdatabase psql -U postgres -c "create extension if not exists ltree;"
+
 test:
   pytest --no-header tests -v
 
