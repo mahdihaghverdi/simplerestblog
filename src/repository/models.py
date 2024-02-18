@@ -90,7 +90,6 @@ class PostModel(Base):
         ForeignKey(f"{DraftModel.__tablename__}.id"),
         unique=True,
     )
-    # TODO: raises exc -> draft is published before
     username: Mapped[str] = mapped_column(
         ForeignKey(f"{UserModel.__tablename__}.username"),
     )

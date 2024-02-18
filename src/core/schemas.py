@@ -104,8 +104,6 @@ class PublishDraftSchema(BaseModel):
 class PostSchema(BaseModel):
     title: str
     body: str
-    draft_hash: str
-    username: str
-    slug: str
     tags: set[str]
     published: datetime
+    updated: datetime | None = None

@@ -12,10 +12,13 @@ class PostService(Service[PostRepo]):
         draft_id: int,
         post: PublishDraftSchema,
         username: str,
-    ) -> PostSchema:
+    ) -> str:
         data = post.model_dump()
         data["draft_id"] = draft_id
         data["published"] = datetime.now(tz=ZoneInfo("UTC"))
         data["username"] = username
-        post = await self.repo.add(data)
-        return post
+        link = await self.repo.add(data)
+        return link
+
+    async def get_global_post(self, username: str, link: str) -> PostSchema:
+        return await self.repo.get_by_link(username, link)

@@ -13,11 +13,6 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
 
-  - repo: https://github.com/asottile/add-trailing-comma
-    rev: v3.1.0
-    hooks:
-    - id: add-trailing-comma
-
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.10.1
     hooks:
@@ -31,8 +26,3 @@ repos:
     - id: ruff
       args:
         - --fix
-
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
-    hooks:
-      - id: black

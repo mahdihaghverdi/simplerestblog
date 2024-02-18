@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
@@ -14,7 +16,6 @@ from src.core.schemas import (
     DraftSchema,
     CreateDraftSchema,
     UpdateDraftSchema,
-    PostSchema,
     PublishDraftSchema,
 )
 from src.core.security import validate_token
@@ -41,6 +42,7 @@ async def create_draft(
     return draft
 
 
+# TODO: Consider the is_published in returning the drafts
 @router.get(
     "/all",
     response_model=list[LittleDraftSchema],
@@ -172,10 +174,11 @@ async def open_read(
 
 @router.post(
     "/publish/{draft_id}",
-    response_model=PostSchema,
-    status_code=status.HTTP_201_CREATED,
+    response_class=RedirectResponse,
+    status_code=status.HTTP_303_SEE_OTHER,
 )
 async def publish_draft(
+    reqeust: Request,
     draft_id: int,
     post: PublishDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -184,5 +187,5 @@ async def publish_draft(
     async with UnitOfWork(db):
         repo = PostRepo(db)
         service = PostService(repo)
-        post = await service.create_post(draft_id, post, user.username)
-    return post
+        link = await service.create_post(draft_id, post, user.username)
+    return f"{str(reqeust.base_url)}@{user.username}/{link}"

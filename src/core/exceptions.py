@@ -13,6 +13,11 @@ class DraftNotFoundError(ResourceNotFoundError):
         self.message = f"<Draft:{draft_id!r}> is not found!"
 
 
+class PostNotFoundError(ResourceNotFoundError):
+    def __init__(self, link):
+        self.message = f"<Post:{link!r} is not found!"
+
+
 class DuplicateUsernameError(Exception):
     def __init__(self, username):
         self.message = f"username: {username!r} already exists!"
@@ -31,3 +36,8 @@ class CredentialsError(UnAuthorizedError):
 
 class UnAuthorisedAccessError(UnAuthorizedError):
     message = "Invalid access. You are not allowed to access this route"
+
+
+class DraftPublishedBeforeError(Exception):
+    def __init__(self, draft_id):
+        self.message = f"<Draft:{draft_id}> is published before!"

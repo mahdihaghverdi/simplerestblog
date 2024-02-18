@@ -7,9 +7,11 @@ from src.core.exceptions import (
     DuplicateUsernameError,
     UnAuthorizedError,
     ResourceNotFoundError,
+    DraftPublishedBeforeError,
 )
 from src.web.auth import router as auth_router
 from src.web.drafts import router as draft_router
+from src.web.globals import router as global_router
 from src.web.users import router as user_router
 
 app = FastAPI(debug=True)
@@ -17,6 +19,7 @@ app = FastAPI(debug=True)
 app.include_router(user_router, tags=["users"], prefix=settings.PREFIX)
 app.include_router(auth_router, tags=["auth"], prefix=settings.PREFIX)
 app.include_router(draft_router, tags=["drafts"], prefix=settings.PREFIX)
+app.include_router(global_router, tags=["global"])
 
 
 @app.exception_handler(DuplicateUsernameError)
@@ -43,4 +46,12 @@ async def unauthorized_exception_handle(_, exc: UnAuthorizedError):
         status_code=status_code,
         content={"detail": exc.message},
         headers=header,
+    )
+
+
+@app.exception_handler(DraftPublishedBeforeError)
+async def draft_published_before(_, exc: DraftPublishedBeforeError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": exc.message},
     )
