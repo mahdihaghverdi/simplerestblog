@@ -58,7 +58,7 @@ def test_signup_duplicate(client):
 
 
 class TestAuth:
-    username = "string"
+    username = "mahdi"
     password = "12345678"
 
     @property
@@ -71,14 +71,7 @@ class TestAuth:
         d["grant_type"] = "password"
         return d
 
-    def test_access_token(self, client):
-        response = client.post(
-            f"{settings.PREFIX}/auth/access-token",
-            data=self.access_token_data,
-        )
-        assert response.status_code == 401, response.text
-
-        client.post(f"{settings.PREFIX}/users/signup", json=self.data)
+    def test_access_token(self, client, create_mahdi):
         response = client.post(
             f"{settings.PREFIX}/auth/access-token",
             data=self.access_token_data,
@@ -90,15 +83,11 @@ class TestAuth:
         assert access_token
         assert token_type.lower() == "bearer"
 
-    def test_access_token_wrong_credentials(self, client):
-        client.post(
-            f"{settings.PREFIX}/auth/access-token",
-            data=self.access_token_data,
-        )
+    def test_access_token_wrong_credentials(self, client, create_mahdi):
         response = client.post(
             f"{settings.PREFIX}/auth/access-token",
             data={
-                "username": "string",
+                "username": "mahdi",
                 "grant_type": "password",
                 "password": "12345677",
             },

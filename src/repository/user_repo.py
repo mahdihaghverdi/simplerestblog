@@ -36,7 +36,7 @@ class UserRepo(BaseRepo):
         try:
             raw_user = await self.execute_mappings_fetchone(stmt)
         except IntegrityError:
-            DuplicateUsernameError(user["username"])
+            raise DuplicateUsernameError(user["username"])
         else:
             return UserSchema(**raw_user)
 
