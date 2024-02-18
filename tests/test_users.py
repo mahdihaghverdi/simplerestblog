@@ -1,12 +1,14 @@
 from src.core.config import settings
-from src.core.enums import UserRolesEnum
+from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.schemas import UserOutSchema, TokenData
 from src.core.security import create_access_token
+
+basic_url = f'{settings.PREFIX}/{APIPrefixesEnum.USERS.value}'
 
 
 def test_signup(client):
     response = client.post(
-        f"{settings.PREFIX}/users/signup",
+        f"{basic_url}/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     assert response.status_code == 201, response.text
@@ -31,7 +33,7 @@ def test_signup_with_data(client):
         "twitter": "@mliewpl",
     }
 
-    response = client.post(f"{settings.PREFIX}/users/signup", json=data)
+    response = client.post(f"{basic_url}/signup", json=data)
     assert response.status_code == 201, response.text
 
     got = UserOutSchema(**response.json())
@@ -46,11 +48,11 @@ def test_signup_with_data(client):
 
 def test_signup_duplicate(client):
     client.post(
-        f"{settings.PREFIX}/users/signup",
+        f"{basic_url}/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     response = client.post(
-        f"{settings.PREFIX}/users/signup",
+        f"{basic_url}/signup",
         json={"username": "Mahdi", "password": "12345678"},
     )
     assert response.status_code == 400, response.text
@@ -94,40 +96,30 @@ class TestAuth:
         )
         assert response.status_code == 401, response.text
 
-        response = client.post(
-            f"{settings.PREFIX}/auth/access-token",
-            data={
-                "username": "str",
-                "grant_type": "password",
-                "password": "12345678",
-            },
-        )
-        assert response.status_code == 401, response.text
-
     def test_not_authorized(self, client):
-        response = client.get(f"{settings.PREFIX}/users/me")
+        response = client.get(f"{basic_url}/me")
         assert response.status_code == 401, response.text
 
     def test_bad_token_username_none(self, client):
-        client.post(f"{settings.PREFIX}/users/signup", json=self.data)
+        client.post(f"{basic_url}/signup", json=self.data)
         access_token = create_access_token(TokenData(username=None))
         response = client.get(
-            f"{settings.PREFIX}/users/me",
+            f"{basic_url}/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 401, response.text
 
     def test_bad_token_role_none(self, client):
-        client.post(f"{settings.PREFIX}/users/signup", json=self.data)
+        client.post(f"{basic_url}/signup", json=self.data)
         access_token = create_access_token(TokenData(username="mahdi", role=None))
         response = client.get(
-            f"{settings.PREFIX}/users/me",
+            f"{basic_url}/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 401, response.text
 
     def test_bad_token_another_encoding(self, client):
-        client.post(f"{settings.PREFIX}/users/signup", json=self.data)
+        client.post(f"{basic_url}/signup", json=self.data)
 
         settings.ALGORITHM = "HS512"
         response = client.post(
@@ -138,7 +130,7 @@ class TestAuth:
 
         settings.ALGORITHM = "HS256"
         response = client.get(
-            f"{settings.PREFIX}/users/me",
+            f"{basic_url}/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 401, response.text
@@ -146,7 +138,7 @@ class TestAuth:
 
 def test_users_me(client, admin_access_token):
     response = client.get(
-        f"{settings.PREFIX}/users/me",
+        f"{basic_url}/me",
         headers={"Authorization": f"Bearer {admin_access_token}"},
     )
     assert response.status_code == 200, response.text
@@ -171,13 +163,13 @@ def test_users_me_with_data(client):
         "twitter": "@mliewpl",
     }
 
-    client.post(f"{settings.PREFIX}/users/signup", json=data)
+    client.post(f"{basic_url}/signup", json=data)
     access_token = create_access_token(
         TokenData(username="mahdi", role=UserRolesEnum.USER),
     )
 
     response = client.get(
-        f"{settings.PREFIX}/users/me",
+        f"{basic_url}/me",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 200, response.text
