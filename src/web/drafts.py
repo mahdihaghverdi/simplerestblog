@@ -42,7 +42,6 @@ async def create_draft(
     return draft
 
 
-# TODO: Consider the is_published in returning the drafts
 @router.get(
     "/all",
     response_model=list[LittleDraftSchema],

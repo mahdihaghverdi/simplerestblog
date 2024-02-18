@@ -35,22 +35,12 @@ class DraftRepo(BaseRepo):
             .join(UserModel)
             .where(self.model.username == username)
             .where(self.model.id == draft_id)
+            .where(self.model.is_published == False)  # noqa: E712
         )
         raw_draft = await self.execute_mappings_fetchone(stmt)
         if raw_draft is not None:
             return DraftSchema(**raw_draft)
         raise DraftNotFoundError(draft_id=draft_id)
-
-    def _select_all_columns(self) -> Select:
-        return select(
-            self.model.id,
-            self.model.created,
-            self.model.title,
-            self.model.body,
-            self.model.updated,
-            self.model.username,
-            self.model.draft_hash,
-        )
 
     async def get_all(self, username: str, desc_order: bool) -> list[LittleDraftSchema]:
         stmt = (
@@ -61,8 +51,11 @@ class DraftRepo(BaseRepo):
             )
             .join(UserModel)
             .where(self.model.username == username)
+            .where(self.model.is_published == False)  # noqa: E712
             .order_by(
-                desc(self.model.created) if desc_order else self.model.created,
+                desc(self.model.created)
+                if desc_order
+                else self.model.created,
             )
         )
         raw_drafts = await self._execute_mappings_fetchall(stmt)
@@ -74,6 +67,7 @@ class DraftRepo(BaseRepo):
             .values(**draft, updated=datetime.now(tz=ZoneInfo("UTC")))
             .where(self.model.username == username)
             .where(self.model.id == draft_id)
+            .where(self.model.is_published == False)  # noqa: E712
             .returning(
                 self.model.id,
                 self.model.created,
@@ -97,6 +91,7 @@ class DraftRepo(BaseRepo):
             select(self.model)
             .where(self.model.username == username)
             .where(self.model.id == draft_id)
+            .where(self.model.is_published == False)  # noqa: E712
         )
         record = (await self.session.execute(stmt)).scalar_one_or_none()
         if record is None:
@@ -109,8 +104,20 @@ class DraftRepo(BaseRepo):
             .join(UserModel)
             .where(self.model.username == username)
             .where(self.model.draft_hash == link)
+            .where(self.model.is_published == False)  # noqa: E712
         )
         draft = await self.execute_mappings_fetchone(stmt)
         if draft is not None:
             return DraftSchema(**draft)
         raise ResourceNotFoundError("Draft is not Found!")
+
+    def _select_all_columns(self) -> Select:
+        return select(
+            self.model.id,
+            self.model.created,
+            self.model.title,
+            self.model.body,
+            self.model.updated,
+            self.model.username,
+            self.model.draft_hash
+        )
