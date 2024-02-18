@@ -1,10 +1,12 @@
 from src.core.config import settings
 from src.core.enums import APIPrefixesEnum
 
+drafts_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}"
+
 
 def test_create_draft(client, admin_auth_headers):
     response = client.post(
-        f"{settings.PREFIX}/drafts/create",
+        f'{drafts_url}/create',
         json={"title": "title", "body": "body"},
         headers=admin_auth_headers,
     )
@@ -16,36 +18,17 @@ def test_create_draft(client, admin_auth_headers):
     assert data["username"] == "admin"
 
 
-def test_get_one_draft(client, mahdi_auth_headers):
-    draft_id = client.post(
-        f"{settings.PREFIX}/drafts/create",
-        json={"title": "title", "body": "body"},
-        headers=mahdi_auth_headers,
-    ).json()["id"]
-
-    response = client.get(
-        f"{settings.PREFIX}/drafts/{draft_id}",
-        headers=mahdi_auth_headers,
-    )
-    assert response.status_code == 200, response.text
-
-    data = response.json()
-    assert data["title"] == "title"
-    assert data["body"] == "body"
-    assert data["username"] == "mahdi"
-
-
 def test_get_all_drafts(client, mahdi_auth_headers):
     def _():
         return client.post(
-            f"{settings.PREFIX}/drafts/create",
+            f"{drafts_url}/create",
             json={"title": "title", "body": "body"},
             headers=mahdi_auth_headers,
         ).json()["id"]
 
     ids = [_(), _()]
     response = client.get(
-        f"{settings.PREFIX}/drafts/all",
+        f"{drafts_url}/all",
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 200, response.text
@@ -56,19 +39,38 @@ def test_get_all_drafts(client, mahdi_auth_headers):
         assert draft["updated"] is None
         assert draft["link"] == [
             "GET",
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{id_}",
+            f"{drafts_url}/{id_}",
         ]
+
+
+def test_get_one_draft(client, mahdi_auth_headers):
+    draft_id = client.post(
+        f"{drafts_url}/create",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+
+    response = client.get(
+        f"{drafts_url}/{draft_id}",
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["title"] == "title"
+    assert data["body"] == "body"
+    assert data["username"] == "mahdi"
 
 
 def test_update_draft(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        f"{drafts_url}/create",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
 
     response = client.put(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{draft_id}",
+        f"{drafts_url}/{draft_id}",
         json={"title": "updated title", "body": "updated body"},
         headers=mahdi_auth_headers,
     )
@@ -82,7 +84,7 @@ def test_update_draft(client, mahdi_auth_headers):
 
 def test_update_draft_not_found(client, mahdi_auth_headers):
     response = client.put(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/1",
+        f"{drafts_url}/1",
         json={"title": "updated title", "body": "updated body"},
         headers=mahdi_auth_headers,
     )
@@ -91,13 +93,13 @@ def test_update_draft_not_found(client, mahdi_auth_headers):
 
 def test_delete_draft(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        f"{drafts_url}/create",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
 
     response = client.delete(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/{draft_id}",
+        f"{drafts_url}/{draft_id}",
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 204, response.text
@@ -105,7 +107,7 @@ def test_delete_draft(client, mahdi_auth_headers):
 
 def test_delete_draft_not_found(client, mahdi_auth_headers):
     response = client.delete(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/1",
+        f"{drafts_url}/1",
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 404, response.text
@@ -113,7 +115,7 @@ def test_delete_draft_not_found(client, mahdi_auth_headers):
 
 def test_open_read(client, mahdi_auth_headers):
     draft_hash = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/create",
+        f"{drafts_url}/create",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["draft_hash"]
