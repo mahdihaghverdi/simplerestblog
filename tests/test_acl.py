@@ -5,6 +5,9 @@ from src.core.enums import APIPrefixesEnum
 
 draft_data = {"title": "title", "body": "body"}
 
+users_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}"
+drafts_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}"
+
 
 class PermissionABC(ABC):
     @abstractmethod
@@ -27,14 +30,14 @@ class PermissionABC(ABC):
 class TestGetByUsername(PermissionABC):
     def test_not_found(self, client, admin_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/users/mahdi",
+            f"{users_basic_url}/mahdi",
             headers=admin_auth_headers,
         )
         assert response.status_code == 404, response.text
 
     def test_admin_request_itself(self, client, admin_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/users/admin",
+            f"{users_basic_url}/admin",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -49,7 +52,7 @@ class TestGetByUsername(PermissionABC):
         create_mahdi,
     ):
         response = client.get(
-            f"{settings.PREFIX}/users/mahdi",
+            f"{users_basic_url}/mahdi",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -59,7 +62,7 @@ class TestGetByUsername(PermissionABC):
 
     def test_user_requests_itself(self, client, mahdi_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/users/mahdi",
+            f"{users_basic_url}/mahdi",
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -75,7 +78,7 @@ class TestGetByUsername(PermissionABC):
         mahdi_auth_headers,
     ):
         response = client.get(
-            f"{settings.PREFIX}/users/admin",
+            f"{users_basic_url}/admin",
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 401, response.text
@@ -83,7 +86,7 @@ class TestGetByUsername(PermissionABC):
 
 def create_draft(client, headers):
     draft_id = client.post(
-        f"{settings.PREFIX}/drafts/create",
+        f"{drafts_basic_url}/create",
         json=draft_data,
         headers=headers,
     ).json()["id"]
@@ -91,12 +94,12 @@ def create_draft(client, headers):
 
 
 class TestGetOneDraft(PermissionABC):
-    basic_path: str = f"{settings.PREFIX}/drafts/" + "{draft_id}"
-    username_path: str = f"{settings.PREFIX}/drafts/" + "{username}/{draft_id}"
+    basic_path: str = f"{drafts_basic_url}/" + "{draft_id}"
+    username_path: str = f"{drafts_basic_url}/" + "{username}/{draft_id}"
 
     def test_not_found(self, client, admin_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/drafts/1",
+            f"{drafts_basic_url}/1",
             headers=admin_auth_headers,
         )
         assert response.status_code == 404, response.text
@@ -162,7 +165,7 @@ class TestGetOneDraft(PermissionABC):
 class TestGetAllDrafts(PermissionABC):
     def test_admin_request_itself(self, client, admin_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/admin",
+            f"{drafts_basic_url}/all/admin",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -170,7 +173,7 @@ class TestGetAllDrafts(PermissionABC):
 
     def test_admin_request_another(self, client, admin_auth_headers, create_mahdi):
         response = client.get(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/mahdi",
+            f"{drafts_basic_url}/all/mahdi",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -178,7 +181,7 @@ class TestGetAllDrafts(PermissionABC):
 
     def test_user_requests_itself(self, client, mahdi_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/mahdi",
+            f"{drafts_basic_url}/all/mahdi",
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -186,7 +189,7 @@ class TestGetAllDrafts(PermissionABC):
 
     def test_user_requests_another(self, client, create_admin, mahdi_auth_headers):
         response = client.get(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/all/admin",
+            f"{drafts_basic_url}/all/admin",
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 401, response.text
