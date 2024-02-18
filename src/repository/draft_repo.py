@@ -75,6 +75,7 @@ class DraftRepo(BaseRepo):
                 self.model.body,
                 self.model.updated,
                 self.model.username,
+                self.model.draft_hash
             )
         )
         draft = await self.execute_mappings_fetchone(stmt)
