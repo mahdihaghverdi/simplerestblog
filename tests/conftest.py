@@ -1,6 +1,4 @@
 import asyncio
-import os
-import subprocess
 
 import pytest
 from sqlalchemy import NullPool, insert
@@ -13,7 +11,7 @@ from src.core.database import get_db
 from src.core.enums import UserRolesEnum
 from src.core.schemas import TokenData
 from src.core.security import hash_password, create_access_token
-from src.repository.models import UserModel
+from src.repository.models import UserModel, Base
 
 AEngineMock = create_async_engine(str(settings.TEST_DATABASE_URL), poolclass=NullPool)
 ASessionMock = async_sessionmaker(
@@ -37,7 +35,7 @@ app.dependency_overrides[get_db] = get_db_mock
 
 @pytest.fixture
 def create_admin():
-    async def _():
+    async def setup():
         async with ASessionMock() as session:
             async with session.begin():
                 stmt = insert(UserModel).values(
@@ -47,7 +45,7 @@ def create_admin():
                 )
                 await session.execute(stmt)
 
-    asyncio.run(_())
+    asyncio.run(setup())
 
 
 @pytest.fixture
@@ -64,17 +62,17 @@ def admin_auth_headers(admin_access_token):
 
 @pytest.fixture
 def create_mahdi():
-    async def _():
+    async def setup():
         async with ASessionMock() as session:
             async with session.begin():
                 stmt = insert(UserModel).values(
                     username="mahdi",
-                    password=hash_password("1"),
+                    password=hash_password("12345678"),
                     role="USER",
                 )
                 await session.execute(stmt)
 
-    asyncio.run(_())
+    asyncio.run(setup())
 
 
 @pytest.fixture
@@ -89,12 +87,18 @@ def mahdi_auth_headers(mahdi_access_token):
     return {"Authorization": f"Bearer {mahdi_access_token}"}
 
 
+async def create_all():
+    async with AEngineMock.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def drop_all():
+    async with AEngineMock.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
 @pytest.fixture(scope="function")
 def client():
-    os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
-    subprocess.call(["alembic", "upgrade", "head"])
-    try:
-        yield TestClient(app=app)
-    finally:
-        os.environ["DATABASE_URL"] = f"{settings.TEST_DATABASE_URL}"
-        subprocess.call(["alembic", "downgrade", "base"])
+    asyncio.run(create_all())
+    yield TestClient(app=app)
+    asyncio.run(drop_all())
