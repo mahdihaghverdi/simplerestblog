@@ -17,7 +17,6 @@ class Base(AsyncAttrs, DeclarativeBase):
         primary_key=True,
         autoincrement=True,
     )
-    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class UserModel(Base):
@@ -27,6 +26,7 @@ class UserModel(Base):
     username: Mapped[str] = mapped_column(String(32), unique=True)
     password: Mapped[str]
     role: Mapped[str]
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     # profile
     name: Mapped[str | None] = mapped_column(String(32))
@@ -62,6 +62,7 @@ class DraftModel(Base):
     updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     draft_hash: Mapped[str]
     is_published: Mapped[bool] = mapped_column(default=lambda: False)
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     # FK
     username: Mapped[str] = mapped_column(
@@ -111,6 +112,7 @@ class TagModel(Base):
     __tablename__ = "tags"
 
     tag: Mapped[str] = mapped_column(unique=True)
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     def __repr__(self):
         return f"<TagModel: tag={self.tag!r}>"
@@ -129,7 +131,7 @@ class CommentModel(Base):
 
     comment: Mapped[str] = mapped_column(String(256))
     path: Mapped[str | None] = mapped_column(LtreeType)
-    commented: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    commented: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # FK
