@@ -135,6 +135,7 @@ def test_publish_post(client, mahdi_auth_headers):
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
+
     response = client.post(
         f"{drafts_url}/publish/{draft_id}",
         json={"tags": ["tag1", "tag2"], "slug": "my slug"},
@@ -174,3 +175,12 @@ def test_draft_published_before(client, mahdi_auth_headers):
         headers=mahdi_auth_headers,
     )
     assert response.status_code == 400, response.text
+
+
+def test_publish_but_draft_not_found(client, mahdi_auth_headers):
+    response = client.post(
+        f"{drafts_url}/publish/1",
+        json={"tags": ["tag1", "tag2"], "slug": "my slug"},
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 404, response.text
