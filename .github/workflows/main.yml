@@ -1,0 +1,62 @@
+name: testing app
+run-name: Test the app
+on:
+  pull_request:
+    types: [opened, reopened]
+  push:
+    branches:
+      - main
+
+env:
+  TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432
+  API_VERSION: 'v1'
+  SECRET_KEY: 'd76db401004b334d0d79bc041f6c6f54c5f495ef4dc228f500eab4df532248ac'
+  ALGORITHM: 'HS256'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    services:
+      postgres:
+        image: postgres
+
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: all ltree to postgres
+        run: |
+          PGPASSWORD=postgres psql -U postgres -h 127.0.0.1 -p ${{ job.services.postgres.ports[5432] }} -d postgres -tc "create extension if not exists ltree;"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Install dependencies
+        run: poetry install --no-ansi --no-interaction --with dev
+
+      - name: Test
+        run: poetry run pytest --cov=src -v
