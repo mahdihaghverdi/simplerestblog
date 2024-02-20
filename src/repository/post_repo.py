@@ -7,7 +7,7 @@ from src.core.exceptions import (
 )
 from src.core.schemas import PostSchema
 from src.repository import BaseRepo
-from src.repository.models import DraftModel, PostModel, TagModel, association_table
+from src.repository.models import DraftModel, PostModel, TagModel, association_table, CommentModel
 from src.repository.tag_repo import TagRepo
 
 
@@ -63,8 +63,21 @@ class PostRepo(BaseRepo):
                 == association_table.columns.post_id,
             )
             .group_by(post_itself_subquery)
+        ).subquery('post_with_tags')
+
+        comments_count = (
+            (
+                select(func.count("*"))
+                .select_from(CommentModel)
+                .where(CommentModel.post_id == post_with_tags.columns.id)
+                .where(CommentModel.parent_id == None)  # noqa: E711
+            )
+            .scalar_subquery()
+            .label("comments_count")
         )
-        raw_post = await self.execute_mappings_fetchone(post_with_tags)
+
+        post_tags_comments_count = select(post_with_tags, comments_count)
+        raw_post = await self.execute_mappings_fetchone(post_tags_comments_count)
         if raw_post is None:
             raise PostNotFoundError(link)
         return PostSchema(**raw_post)

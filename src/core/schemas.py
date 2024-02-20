@@ -102,8 +102,10 @@ class PublishDraftSchema(BaseModel):
 
 
 class PostSchema(BaseModel):
+    id: int
     title: str
     body: str
     tags: set[str]
     published: datetime
     updated: datetime | None = None
+    comments_count: int
