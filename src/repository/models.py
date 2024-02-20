@@ -83,7 +83,7 @@ class PostModel(Base):
     __tablename__ = "posts"
 
     slug: Mapped[str]
-    published: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    published: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     # FK
     draft_id: Mapped[int] = mapped_column(

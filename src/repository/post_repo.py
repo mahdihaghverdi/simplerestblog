@@ -15,7 +15,9 @@ class PostRepo(BaseRepo):
     model = PostModel
 
     async def add(self, data: dict) -> str:
-        draft_existence_stmt = select(DraftModel).where(DraftModel.id == data["draft_id"])
+        draft_existence_stmt = select(DraftModel).where(
+            DraftModel.id == data["draft_id"]
+        )
         draft: DraftModel = (
             await self.session.execute(draft_existence_stmt)
         ).scalar_one_or_none()
@@ -57,8 +59,8 @@ class PostRepo(BaseRepo):
             select(post_itself_subquery, func.array_agg(TagModel.tag).label("tags"))
             .outerjoin(
                 association_table.join(TagModel),
-                post_itself_subquery.columns.id
-                == association_table.columns.post_id,  # noqa
+                post_itself_subquery.columns.id  # noqa
+                == association_table.columns.post_id,
             )
             .group_by(post_itself_subquery)
         )
