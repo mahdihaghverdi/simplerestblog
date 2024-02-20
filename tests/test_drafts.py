@@ -152,6 +152,25 @@ def test_publish_post(client, mahdi_auth_headers):
     )
     assert title == "title"
     assert body == "body"
-    assert tags == ["tag1", "tag2"]
+    assert set(tags) == {"tag1", "tag2"}
     assert published
     assert not updated
+
+
+def test_draft_published_before(client, mahdi_auth_headers):
+    draft_id = client.post(
+        f"{drafts_url}/create",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+    client.post(
+        f"{drafts_url}/publish/{draft_id}",
+        json={"tags": ["tag1", "tag2"], "slug": "my slug"},
+        headers=mahdi_auth_headers,
+    )
+    response = client.post(
+        f"{drafts_url}/publish/{draft_id}",
+        json={"tags": ["tag1", "tag2"], "slug": "my slug"},
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 400, response.text
