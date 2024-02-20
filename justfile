@@ -36,4 +36,4 @@ test:
   pytest --no-header tests -v
 
 test-with-cov:
-  pytest --no-header --cov=src --cov-report=html --cov-report=term-missing tests -vv
+  pytest --durations=10 --no-header --cov=src --cov-report=html --cov-report=term-missing tests -v
