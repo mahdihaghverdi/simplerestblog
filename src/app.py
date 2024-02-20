@@ -10,6 +10,7 @@ from src.core.exceptions import (
     DraftPublishedBeforeError,
 )
 from src.web.auth import router as auth_router
+from src.web.comments import router as comment_router
 from src.web.drafts import router as draft_router
 from src.web.globals import router as global_router
 from src.web.users import router as user_router
@@ -20,6 +21,7 @@ app.include_router(user_router, tags=["users"], prefix=settings.PREFIX)
 app.include_router(auth_router, tags=["auth"], prefix=settings.PREFIX)
 app.include_router(draft_router, tags=["drafts"], prefix=settings.PREFIX)
 app.include_router(global_router, tags=["global"])
+app.include_router(comment_router, tags=["comments"], prefix=settings.PREFIX)
 
 
 @app.exception_handler(DuplicateUsernameError)

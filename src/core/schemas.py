@@ -109,3 +109,17 @@ class PostSchema(BaseModel):
     published: datetime
     updated: datetime | None = None
     comments_count: int
+
+
+class CreateCommentSchema(BaseModel):
+    comment: constr(strip_whitespace=True, min_length=1, max_length=256)
+
+
+class CommentSchema(BaseModel):
+    id: int
+    commented: datetime
+    comment: str
+    path: str | None = None
+    updated: datetime | None = None
+    parent_id: int | None = None
+    username: str
