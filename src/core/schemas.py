@@ -123,3 +123,10 @@ class CommentSchema(BaseModel):
     updated: datetime | None = None
     parent_id: int | None = None
     username: str
+
+
+class LittlePostSchema(BaseModel):
+    id: int
+    title: str
+    slug: str
+    published: datetime

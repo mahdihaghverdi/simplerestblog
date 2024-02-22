@@ -5,9 +5,15 @@ from src.core.exceptions import (
     DraftPublishedBeforeError,
     PostNotFoundError,
 )
-from src.core.schemas import PostSchema
+from src.core.schemas import PostSchema, LittlePostSchema
 from src.repository import BaseRepo
-from src.repository.models import DraftModel, PostModel, TagModel, association_table, CommentModel
+from src.repository.models import (
+    DraftModel,
+    PostModel,
+    TagModel,
+    association_table,
+    CommentModel,
+)
 from src.repository.tag_repo import TagRepo
 
 
@@ -15,9 +21,7 @@ class PostRepo(BaseRepo):
     model = PostModel
 
     async def add(self, data: dict) -> str:
-        draft_existence_stmt = select(DraftModel).where(
-            DraftModel.id == data["draft_id"]
-        )
+        draft_existence_stmt = select(DraftModel).where(DraftModel.id == data["draft_id"])
         draft: DraftModel = (
             await self.session.execute(draft_existence_stmt)
         ).scalar_one_or_none()
@@ -63,7 +67,7 @@ class PostRepo(BaseRepo):
                 == association_table.columns.post_id,
             )
             .group_by(post_itself_subquery)
-        ).subquery('post_with_tags')
+        ).subquery("post_with_tags")
 
         comments_count = (
             (
@@ -81,3 +85,19 @@ class PostRepo(BaseRepo):
         if raw_post is None:
             raise PostNotFoundError(link)
         return PostSchema(**raw_post)
+
+    async def get_all(self, username: str) -> list[LittlePostSchema]:
+        stmt = (
+            select(
+                self.model.id,
+                DraftModel.title,
+                self.model.slug,
+                self.model.published,
+            )
+            .join(self.model.draft)
+            .join(self.model.user)
+            .where(self.model.username == username)
+        )
+
+        posts = await self.execute_mappings_fetchall(stmt)
+        return [LittlePostSchema(**p) for p in posts]
