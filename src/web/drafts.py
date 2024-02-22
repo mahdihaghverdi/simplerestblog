@@ -29,7 +29,7 @@ from src.service.user_service import get_user
 router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 
 
-@router.post("/create", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
 async def create_draft(
     draft: CreateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],

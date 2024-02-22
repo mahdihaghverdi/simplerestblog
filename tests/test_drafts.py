@@ -6,7 +6,7 @@ drafts_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}"
 
 def test_create_draft(client, admin_auth_headers):
     response = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=admin_auth_headers,
     )
@@ -21,7 +21,7 @@ def test_create_draft(client, admin_auth_headers):
 def test_get_all_drafts(client, mahdi_auth_headers):
     def _():
         return client.post(
-            f"{drafts_url}/create",
+            f"{drafts_url}",
             json={"title": "title", "body": "body"},
             headers=mahdi_auth_headers,
         ).json()["id"]
@@ -45,7 +45,7 @@ def test_get_all_drafts(client, mahdi_auth_headers):
 
 def test_get_one_draft(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
@@ -64,7 +64,7 @@ def test_get_one_draft(client, mahdi_auth_headers):
 
 def test_update_draft(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
@@ -93,7 +93,7 @@ def test_update_draft_not_found(client, mahdi_auth_headers):
 
 def test_delete_draft(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
@@ -115,7 +115,7 @@ def test_delete_draft_not_found(client, mahdi_auth_headers):
 
 def test_open_read(client, mahdi_auth_headers):
     draft_hash = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["draft_hash"]
@@ -131,7 +131,7 @@ def test_open_read(client, mahdi_auth_headers):
 
 def test_publish_post(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]
@@ -160,7 +160,7 @@ def test_publish_post(client, mahdi_auth_headers):
 
 def test_draft_published_before(client, mahdi_auth_headers):
     draft_id = client.post(
-        f"{drafts_url}/create",
+        f"{drafts_url}",
         json={"title": "title", "body": "body"},
         headers=mahdi_auth_headers,
     ).json()["id"]

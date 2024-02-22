@@ -15,7 +15,7 @@ router = APIRouter(prefix="/comments")
 
 
 @router.post(
-    "/add/{post_id}", response_model=CommentSchema, status_code=status.HTTP_201_CREATED
+    "/{post_id}", response_model=CommentSchema, status_code=status.HTTP_201_CREATED
 )
 async def add_comment(
     post_id: int,

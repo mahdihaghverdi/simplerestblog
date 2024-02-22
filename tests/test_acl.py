@@ -86,7 +86,7 @@ class TestGetByUsername(PermissionABC):
 
 def create_draft(client, headers):
     draft_id = client.post(
-        f"{drafts_basic_url}/create",
+        f"{drafts_basic_url}",
         json=draft_data,
         headers=headers,
     ).json()["id"]
