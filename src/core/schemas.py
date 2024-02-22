@@ -111,11 +111,11 @@ class PostSchema(BaseModel):
     comments_count: int
 
 
-class CreateCommentSchema(BaseModel):
+class CreateCommentReplySchema(BaseModel):
     comment: constr(strip_whitespace=True, min_length=1, max_length=256)
 
 
-class CommentSchema(BaseModel):
+class CommentReplySchema(BaseModel):
     id: int
     commented: datetime
     comment: str
