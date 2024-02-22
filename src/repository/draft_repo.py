@@ -53,12 +53,10 @@ class DraftRepo(BaseRepo):
             .where(self.model.username == username)
             .where(self.model.is_published == False)  # noqa: E712
             .order_by(
-                desc(self.model.created)
-                if desc_order
-                else self.model.created,
+                desc(self.model.created) if desc_order else self.model.created,
             )
         )
-        raw_drafts = await self._execute_mappings_fetchall(stmt)
+        raw_drafts = await self.execute_mappings_fetchall(stmt)
         return [LittleDraftSchema(**draft, link=None) for draft in raw_drafts]
 
     async def update(self, draft_id: int, draft: dict, username: str) -> DraftSchema:
@@ -75,17 +73,13 @@ class DraftRepo(BaseRepo):
                 self.model.body,
                 self.model.updated,
                 self.model.username,
-                self.model.draft_hash
+                self.model.draft_hash,
             )
         )
         draft = await self.execute_mappings_fetchone(stmt)
         if draft is not None:
             return DraftSchema(**draft)
         raise DraftNotFoundError(draft_id=draft_id)
-
-    async def _execute_mappings_fetchall(self, stmt) -> list[dict]:
-        drafts = (await self.session.execute(stmt)).mappings().fetchall()
-        return [dict(**draft) for draft in drafts]
 
     async def delete(self, draft_id: int, username: str) -> None:
         stmt = (
@@ -99,12 +93,12 @@ class DraftRepo(BaseRepo):
             raise DraftNotFoundError(draft_id)
         await self.session.delete(record)
 
-    async def get_by_link(self, username: str, link: str) -> DraftSchema:
+    async def get_by_link(self, username: str, slug: str) -> DraftSchema:
         stmt = (
             self._select_all_columns()
             .join(UserModel)
             .where(self.model.username == username)
-            .where(self.model.draft_hash == link)
+            .where(self.model.draft_hash == slug)
             .where(self.model.is_published == False)  # noqa: E712
         )
         draft = await self.execute_mappings_fetchone(stmt)
@@ -120,5 +114,5 @@ class DraftRepo(BaseRepo):
             self.model.body,
             self.model.updated,
             self.model.username,
-            self.model.draft_hash
+            self.model.draft_hash,
         )

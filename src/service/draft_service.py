@@ -51,5 +51,5 @@ class DraftService(Service[DraftRepo]):
     async def delete_draft(self, draft_id: int, username: str) -> None:
         await self.repo.delete(draft_id, username)
 
-    async def get_global(self, username: str, link: str) -> DraftSchema:
-        return await self.repo.get_by_link(username, link)
+    async def get_global(self, username: str, slug: str) -> DraftSchema:
+        return await self.repo.get_by_link(username, slug)

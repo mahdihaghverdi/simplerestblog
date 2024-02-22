@@ -155,19 +155,19 @@ async def delete_draft(
 
 
 @router.get(
-    "/open-read/@{username}/{link}",
+    "/open-read/@{username}/{slug}",
     response_model=DraftSchema,
     status_code=status.HTTP_200_OK,
 )
 async def open_read(
     username: str,
-    link: str,
+    slug: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
         service = DraftService(repo)
-        draft = await service.get_global(username, link)
+        draft = await service.get_global(username, slug)
     return draft
 
 
