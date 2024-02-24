@@ -7,7 +7,7 @@ from sqlalchemy.sql import expression
 from sqlalchemy_utils import Ltree
 from sqlalchemy_utils.types.ltree import LQUERY
 
-from src.core.exceptions import PostNotFoundError
+from src.core.exceptions import PostNotFoundError, CommentNotFoundError
 from src.core.schemas import CommentReplySchema
 from src.repository import BaseRepo
 from src.repository.models import CommentModel, PostModel
@@ -17,6 +17,9 @@ class CommentReplyRepo(BaseRepo):
     model = CommentModel
 
     async def add(self, comment_data: dict) -> CommentReplySchema:
+        post_id = comment_data["post_id"]
+        await self._check_post_existence(post_id)
+
         stmt = (
             insert(self.model)
             .values(**comment_data)
@@ -26,7 +29,7 @@ class CommentReplyRepo(BaseRepo):
         try:
             comment = await self.execute_mappings_fetchone(stmt)
         except IntegrityError:
-            raise PostNotFoundError(comment_data["post_id"])
+            raise CommentNotFoundError(comment_data["parent_id"])
         else:
             cmt_id = comment["id"]
 
@@ -63,6 +66,14 @@ class CommentReplyRepo(BaseRepo):
             comment = await self.execute_mappings_fetchone(add_path_stmt)
             return CommentReplySchema(**comment)
 
+    async def _check_post_existence(self, post_id):
+        if (
+            await self.session.execute(
+                select(PostModel.id).where(PostModel.id == post_id)
+            )
+        ).first() is None:
+            raise PostNotFoundError(post_id)
+
     async def get(
         self,
         post_id: int,
@@ -71,8 +82,9 @@ class CommentReplyRepo(BaseRepo):
         order: Literal["first", "last", "most_replied"],
         parent_id: int | None = None,
     ) -> list[CommentReplySchema]:
-        _order = None
+        await self._check_post_existence(post_id)
 
+        _order = None
         c = aliased(self.model, name="c")
         c2 = aliased(self.model, name="c2")
 
@@ -86,6 +98,7 @@ class CommentReplyRepo(BaseRepo):
             case _:
                 _order = desc(c.commented)
 
+        c2 = aliased(self.model, name="c2")
         sq = (
             select(func.count("*"))
             .select_from(c2)
@@ -123,3 +136,40 @@ class CommentReplyRepo(BaseRepo):
         )
         comments = await self.execute_mappings_fetchall(stmt)
         return [CommentReplySchema(**comment) for comment in comments]
+
+    async def update(
+        self, comment_data: dict, comment_id: int, post_id: int
+    ) -> CommentReplySchema:
+        await self._check_post_existence(post_id)
+
+        stmt = (
+            update(self.model)
+            .where(self.model.id == comment_id)
+            .values(**comment_data)
+            .returning(
+                self.model.id,
+                self.model.commented,
+                self.model.comment,
+                expression.cast(self.model.path, String),
+                self.model.updated,
+                self.model.parent_id,
+                self.model.username,
+            )
+        )
+        sq = (
+            select(func.count("*"))
+            .select_from(self.model)
+            .filter(
+                self.model.path.lquery(
+                    expression.cast(
+                        expression.cast(f"{comment_id}" + ".*{1}", String),
+                        LQUERY,
+                    )
+                )
+            )
+        )
+        comment = await self.execute_mappings_fetchone(stmt)
+        if comment is not None:
+            reply_count = (await self.session.execute(sq)).scalar_one()
+            return CommentReplySchema(**comment, reply_count=reply_count)
+        raise CommentNotFoundError(comment_id)

@@ -18,6 +18,11 @@ class PostNotFoundError(ResourceNotFoundError):
         self.message = f"<Post:{link!r} is not found!"
 
 
+class CommentNotFoundError(ResourceNotFoundError):
+    def __init__(self, comment_id):
+        self.message = f"<Comment:{comment_id} is not found!"
+
+
 class DuplicateUsernameError(Exception):
     def __init__(self, username):
         self.message = f"username: {username!r} already exists!"

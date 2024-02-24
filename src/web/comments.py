@@ -78,3 +78,20 @@ async def get_replies(
         service = CommentReplyService(repo)
         comments = await service.get_replies(post_id, comment_id, page, how_many, order)
     return comments
+
+
+@router.put("/{post_id}/{comment_id}", response_model=CommentReplySchema)
+async def update_comment(
+    post_id: int,
+    comment_id: int,
+    comment: CreateCommentReplySchema,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+):
+    async with UnitOfWork(db):
+        repo = CommentReplyRepo(db)
+        service = CommentReplyService(repo)
+        comment = await service.update_comment(
+            post_id, comment_id, comment, user.username
+        )
+    return comment
