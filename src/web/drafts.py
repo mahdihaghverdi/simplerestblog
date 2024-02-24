@@ -67,7 +67,6 @@ async def get_all_drafts(
 async def get_all_drafts_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
@@ -75,8 +74,8 @@ async def get_all_drafts_by_username(
     await check_permission(
         db,
         token.role,
+        token.username,
         username,
-        user,
         RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
         permission_setting,
     )
@@ -109,15 +108,14 @@ async def get_one_draft_by_username(
     username: str,
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(
         db,
         token.role,
-        username,
-        user,
+        token.username,
+        draft_id,
         RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
         permission_setting,
     )

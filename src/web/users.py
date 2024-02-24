@@ -41,15 +41,14 @@ async def me(user: Annotated[UserSchema, Depends(get_user)]):
 async def get_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
     token: Annotated[TokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(
         db=db,
         user_role=token.role,
-        username=username,
-        user=user,
+        username=token.username,
+        resource_identifier=username,
         route=RoutesEnum.GET_USER_BY_USERNAME,
         permission_setting=permission_setting,
     )

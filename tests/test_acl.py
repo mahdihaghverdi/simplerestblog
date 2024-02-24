@@ -94,7 +94,6 @@ def create_draft(client, headers):
 
 
 class TestGetOneDraft(PermissionABC):
-    basic_path: str = f"{drafts_basic_url}/" + "{draft_id}"
     username_path: str = f"{drafts_basic_url}/" + "{username}/{draft_id}"
 
     def test_not_found(self, client, admin_auth_headers):
@@ -108,7 +107,7 @@ class TestGetOneDraft(PermissionABC):
         draft_id = create_draft(client, admin_auth_headers)
 
         response = client.get(
-            self.basic_path.format(draft_id=draft_id),
+            self.username_path.format(draft_id=draft_id, username="admin"),
             headers=admin_auth_headers,
         )
         assert response.status_code == 200, response.text
@@ -139,7 +138,7 @@ class TestGetOneDraft(PermissionABC):
     def test_user_requests_itself(self, client, mahdi_auth_headers):
         draft_id = create_draft(client, mahdi_auth_headers)
         response = client.get(
-            self.basic_path.format(draft_id=draft_id),
+            self.username_path.format(draft_id=draft_id, username="mahdi"),
             headers=mahdi_auth_headers,
         )
         assert response.status_code == 200, response.text
