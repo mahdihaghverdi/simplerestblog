@@ -36,3 +36,13 @@ class CommentReplyService(Service[CommentReplyRepo]):
         order: Literal["first", "last", "most_replied"],
     ) -> list[CommentReplySchema]:
         return await self.repo.get(post_id, page, how_many, order)
+
+    async def get_replies(
+        self,
+        post_id: int,
+        comment_id: int,
+        page: int,
+        how_many: int,
+        order: Literal["first", "last", "most_replied"],
+    ) -> list[CommentReplySchema]:
+        return await self.repo.get(post_id, page, how_many, order, parent_id=comment_id)

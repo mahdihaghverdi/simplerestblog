@@ -69,6 +69,12 @@ async def get_replies(
     post_id: int,
     comment_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    page: Annotated[int, Query(ge=1)] = 1,
+    how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
+    order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
 ):
-    pass
+    async with UnitOfWork(db):
+        repo = CommentReplyRepo(db)
+        service = CommentReplyService(repo)
+        comments = await service.get_replies(post_id, comment_id, page, how_many, order)
+    return comments
