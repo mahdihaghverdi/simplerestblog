@@ -173,3 +173,14 @@ class CommentReplyRepo(BaseRepo):
             reply_count = (await self.session.execute(sq)).scalar_one()
             return CommentReplySchema(**comment, reply_count=reply_count)
         raise CommentNotFoundError(comment_id)
+
+    async def delete(self, post_id: int, comment_id: int):
+        await self._check_post_existence(post_id)
+        comment: CommentModel = (
+            await self.session.execute(
+                select(self.model).where(self.model.id == comment_id)
+            )
+        ).scalar_one_or_none()
+        if comment is None:
+            raise CommentNotFoundError(comment_id)
+        await self.session.delete(comment)

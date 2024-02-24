@@ -60,3 +60,6 @@ class CommentReplyService(Service[CommentReplyRepo]):
         data["updated"] = datetime.now(tz=ZoneInfo("UTC"))
         data["username"] = username
         return await self.repo.update(data, comment_id, post_id)
+
+    async def delete_comment(self, post_id: int, comment_id: int):
+        await self.repo.delete(post_id, comment_id)
