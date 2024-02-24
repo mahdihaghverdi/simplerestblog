@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
+# TODO: make the joins better
 class BaseRepo:
     def __init__(self, session):
         self.session: AsyncSession = session

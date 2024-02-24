@@ -123,6 +123,7 @@ class CommentReplySchema(BaseModel):
     updated: datetime | None = None
     parent_id: int | None = None
     username: str
+    reply_count: int
 
 
 class LittlePostSchema(BaseModel):

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from src.core.schemas import CreateCommentReplySchema, CommentReplySchema
 from src.repository.comment_repo import CommentReplyRepo
 from src.service import Service
@@ -25,3 +27,12 @@ class CommentReplyService(Service[CommentReplyRepo]):
         data["username"] = username
         data["parent_id"] = comment_id
         return await self.repo.add(data)
+
+    async def get_comments(
+        self,
+        post_id: int,
+        page: int,
+        how_many: int,
+        order: Literal["first", "last", "most_replied"],
+    ) -> list[CommentReplySchema]:
+        return await self.repo.get(post_id, page, how_many, order)

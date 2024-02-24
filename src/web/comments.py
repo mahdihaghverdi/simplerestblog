@@ -1,6 +1,6 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -47,3 +47,28 @@ async def add_reply(
         service = CommentReplyService(repo)
         reply = await service.create_reply(post_id, comment_id, reply, user.username)
     return reply
+
+
+@router.get("/{post_id}", response_model=list[CommentReplySchema])
+async def get_comments(
+    post_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    page: Annotated[int, Query(ge=1)] = 1,
+    how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
+    order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
+):
+    async with UnitOfWork(db):
+        repo = CommentReplyRepo(db)
+        service = CommentReplyService(repo)
+        comments = await service.get_comments(post_id, page, how_many, order)
+    return comments
+
+
+@router.get("/{post_id}/{comment_id}", response_model=list[CommentReplySchema])
+async def get_replies(
+    post_id: int,
+    comment_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[UserSchema, Depends(get_user)],
+):
+    pass
