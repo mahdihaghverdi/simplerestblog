@@ -16,6 +16,7 @@ class APIPrefixesEnum(StrEnum):
     AUTH = "auth"
     USERS = "users"
     DRAFTS = "drafts"
+    POSTS = "posts"
 
 
 class UserRolesEnum(StrEnum):

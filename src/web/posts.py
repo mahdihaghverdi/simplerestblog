@@ -4,12 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.core.enums import APIPrefixesEnum
 from src.core.schemas import LittlePostSchema
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.post_service import PostService
 
-router = APIRouter(prefix="/posts")
+router = APIRouter(prefix=f"/{APIPrefixesEnum.POSTS.value}")
 
 
 @router.get("/{username}", response_model=list[LittlePostSchema])
