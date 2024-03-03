@@ -115,5 +115,43 @@ def test_get_comments(client, mahdi_auth_headers, post_id):
         assert cmt["comment"] == f"comment{idx}"
 
 
-def test_get_replies(client, mahdi_auth_headers, post_id):
-    pass
+def test_get_replies(client, mahdi_auth_headers, post_id, comment_id):
+    client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        json={"comment": "reply1"},
+        headers=mahdi_auth_headers,
+    )
+    client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        json={"comment": "reply2"},
+        headers=mahdi_auth_headers,
+    )
+    client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        json={"comment": "reply3"},
+        headers=mahdi_auth_headers,
+    )
+
+    response = client.get(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        params={"order": "first"},
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert len(data) == 3
+
+    for idx, cmt in enumerate(data, 1):
+        assert cmt["comment"] == f"reply{idx}"
+
+    response = client.get(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        params={"order": "last"},
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert len(data) == 3
+
+    for idx, cmt in enumerate(reversed(data), 1):
+        assert cmt["comment"] == f"reply{idx}"
