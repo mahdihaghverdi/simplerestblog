@@ -45,7 +45,7 @@ jobs:
           PGPASSWORD=postgres psql -U postgres -h 127.0.0.1 -p ${{ job.services.postgres.ports[5432] }} -d postgres -tc "create extension if not exists ltree;"
 
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Poetry
         run: curl -sSL https://install.python-poetry.org | python3 -
