@@ -64,7 +64,7 @@ class CommentReplyRepo(BaseRepo):
                 )
 
             comment = await self.execute_mappings_fetchone(add_path_stmt)
-            return CommentReplySchema(**comment)
+            return CommentReplySchema(**comment, reply_count=0)
 
     async def _check_post_existence(self, post_id):
         if (

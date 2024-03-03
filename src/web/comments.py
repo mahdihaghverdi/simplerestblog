@@ -6,7 +6,7 @@ from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
-from src.core.enums import RoutesEnum
+from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     UserSchema,
     CreateCommentReplySchema,
@@ -19,7 +19,7 @@ from src.repository.unitofwork import UnitOfWork
 from src.service.comment_service import CommentReplyService
 from src.service.user_service import get_user
 
-router = APIRouter(prefix="/comments")
+router = APIRouter(prefix=f"/{APIPrefixesEnum.COMMENTS.value}")
 
 
 @router.post(
