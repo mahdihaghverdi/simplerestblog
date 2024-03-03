@@ -104,6 +104,16 @@ def post_id(client, mahdi_auth_headers):
     return post_id
 
 
+@pytest.fixture
+def comment_id(client, mahdi_auth_headers, post_id):
+    comment_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
+        json={"comment": "comment"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+    return comment_id
+
+
 async def create_all():
     async with AEngineMock.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

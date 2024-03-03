@@ -21,13 +21,7 @@ def test_add_comment(client, mahdi_auth_headers, post_id):
     assert data["reply_count"] == 0
 
 
-def test_add_reply(client, mahdi_auth_headers, post_id):
-    comment_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
-        json={"comment": "comment"},
-        headers=mahdi_auth_headers,
-    ).json()["id"]
-
+def test_add_reply(client, mahdi_auth_headers, post_id, comment_id):
     response = client.post(
         f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
         json={"comment": "reply"},
@@ -119,3 +113,7 @@ def test_get_comments(client, mahdi_auth_headers, post_id):
 
     for idx, cmt in enumerate(data, 1):
         assert cmt["comment"] == f"comment{idx}"
+
+
+def test_get_replies(client, mahdi_auth_headers, post_id):
+    pass
