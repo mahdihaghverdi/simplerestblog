@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 from src.app import app
 from src.core.config import settings
 from src.core.database import get_db
-from src.core.enums import UserRolesEnum
+from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.schemas import TokenData
 from src.core.security import hash_password, create_access_token
 from src.repository.models import UserModel, Base
@@ -85,6 +85,23 @@ def mahdi_access_token(create_mahdi):
 @pytest.fixture
 def mahdi_auth_headers(mahdi_access_token):
     return {"Authorization": f"Bearer {mahdi_access_token}"}
+
+
+@pytest.fixture
+def post_id(client, mahdi_auth_headers):
+    draft_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
+        json={"title": "title", "body": "body"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+
+    post_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
+        json={"tags": ["tag1", "tag2"], "slug": "slug"},
+        headers=mahdi_auth_headers,
+    ).json()["id"]
+
+    return post_id
 
 
 async def create_all():
