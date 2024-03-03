@@ -21,6 +21,16 @@ def test_add_comment(client, mahdi_auth_headers, post_id_fixture):
     assert data["reply_count"] == 0
 
 
+def test_add_comment_post_not_found(client, mahdi_auth_headers):
+    response = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/100",
+        json={"comment": "comment"},
+        headers=mahdi_auth_headers,
+    )
+
+    assert response.status_code == 404, response.text
+
+
 def test_add_reply(client, mahdi_auth_headers, post_id_fixture, comment_id_fixture):
     response = client.post(
         f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id_fixture}/{comment_id_fixture}",
@@ -38,6 +48,16 @@ def test_add_reply(client, mahdi_auth_headers, post_id_fixture, comment_id_fixtu
     assert data["parent_id"] == comment_id_fixture
     assert data["username"] == "mahdi"
     assert data["reply_count"] == 0
+
+
+def test_add_reply_comment_not_found(client, mahdi_auth_headers, post_id_fixture):
+    response = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id_fixture}/100",
+        json={"comment": "reply"},
+        headers=mahdi_auth_headers,
+    )
+
+    assert response.status_code == 404, response.text
 
 
 def test_get_comments(client, mahdi_auth_headers, post_id_fixture):

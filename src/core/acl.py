@@ -53,8 +53,8 @@ async def _comment_not_self_not_allowed(
         .where(CommentModel.id == comment_id)
     )
 
-    draft = (await db.execute(stmt)).first()
-    if draft is not None:
+    comment = (await db.execute(stmt)).first()
+    if comment is not None:
         return True
     raise UnAuthorisedAccessError()
 
