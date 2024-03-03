@@ -155,3 +155,21 @@ def test_get_replies(client, mahdi_auth_headers, post_id, comment_id):
 
     for idx, cmt in enumerate(reversed(data), 1):
         assert cmt["comment"] == f"reply{idx}"
+
+
+def test_update_comment(client, mahdi_auth_headers, post_id, comment_id):
+    response = client.put(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}/{comment_id}",
+        json={"comment": "updated comment"},
+        headers=mahdi_auth_headers,
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["commented"]
+    assert data["comment"] == "updated comment"
+    assert data["path"] == str(data["id"])
+    assert data["updated"] is not None
+    assert data["parent_id"] is None
+    assert data["username"] == "mahdi"
+    assert data["reply_count"] == 0
