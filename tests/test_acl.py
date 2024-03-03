@@ -7,6 +7,7 @@ draft_data = {"title": "title", "body": "body"}
 
 users_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}"
 drafts_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}"
+comments_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}"
 
 
 class PermissionABC(ABC):
@@ -190,5 +191,87 @@ class TestGetAllDrafts(PermissionABC):
         response = client.get(
             f"{drafts_basic_url}/all/admin",
             headers=mahdi_auth_headers,
+        )
+        assert response.status_code == 401, response.text
+
+
+class TestDeleteComment(PermissionABC):
+    def test_admin_request_itself(self, client, admin_auth_headers):
+        draft_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
+            json={"title": "title", "body": "body"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        post_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
+            json={"tags": ["tag1", "tag2"], "slug": "slug"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        comment_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
+            json={"comment": "comment"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        response = client.delete(
+            f"{comments_basic_url}/{post_id}/{comment_id}", headers=admin_auth_headers
+        )
+        assert response.status_code == 204, response.text
+
+        comments = client.get(f"{comments_basic_url}/{post_id}").json()
+        assert len(comments) == 0
+
+    def test_admin_request_another(
+        self,
+        client,
+        admin_auth_headers,
+        mahdi_auth_headers,
+        post_id_fixture,
+        comment_id_fixture,
+    ):
+        response = client.delete(
+            f"{comments_basic_url}/{post_id_fixture}/{comment_id_fixture}",
+            headers=admin_auth_headers,
+        )
+        assert response.status_code == 204, response.text
+
+        comments = client.get(f"{comments_basic_url}/{post_id_fixture}").json()
+        assert len(comments) == 0
+
+    def test_user_requests_itself(
+        self, client, mahdi_auth_headers, post_id_fixture, comment_id_fixture
+    ):
+        response = client.delete(
+            f"{comments_basic_url}/{post_id_fixture}/{comment_id_fixture}",
+            headers=mahdi_auth_headers,
+        )
+        assert response.status_code == 204, response.text
+
+        comments = client.get(f"{comments_basic_url}/{post_id_fixture}").json()
+        assert len(comments) == 0
+
+    def test_user_requests_another(self, client, admin_auth_headers, mahdi_auth_headers):
+        draft_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
+            json={"title": "title", "body": "body"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        post_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
+            json={"tags": ["tag1", "tag2"], "slug": "slug"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        comment_id = client.post(
+            f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
+            json={"comment": "comment"},
+            headers=admin_auth_headers,
+        ).json()["id"]
+
+        response = client.delete(
+            f"{comments_basic_url}/{post_id}/{comment_id}", headers=mahdi_auth_headers
         )
         assert response.status_code == 401, response.text

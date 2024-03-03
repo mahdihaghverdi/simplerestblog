@@ -88,7 +88,7 @@ def mahdi_auth_headers(mahdi_access_token):
 
 
 @pytest.fixture
-def post_id(client, mahdi_auth_headers):
+def post_id_fixture(client, mahdi_auth_headers):
     draft_id = client.post(
         f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
         json={"title": "title", "body": "body"},
@@ -105,9 +105,9 @@ def post_id(client, mahdi_auth_headers):
 
 
 @pytest.fixture
-def comment_id(client, mahdi_auth_headers, post_id):
+def comment_id_fixture(client, mahdi_auth_headers, post_id_fixture):
     comment_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id_fixture}",
         json={"comment": "comment"},
         headers=mahdi_auth_headers,
     ).json()["id"]
