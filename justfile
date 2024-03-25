@@ -16,6 +16,14 @@ database:
     -v fastblog-data:/var/lib/postgresql/data \
      postgres
 
+cache-database:
+  docker run \
+    --name redis-dev \
+    --rm \
+    --detach \
+    -p 6379:6379 \
+    redis
+
 test-database:
   docker run \
     --name testdatabase \
