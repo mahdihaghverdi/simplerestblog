@@ -27,6 +27,7 @@ class UserModel(Base):
     password: Mapped[str]
     role: Mapped[str]
     created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    totp_hash: Mapped[str]
 
     # profile
     name: Mapped[str | None] = mapped_column(String(32))
