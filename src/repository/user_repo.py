@@ -5,7 +5,7 @@ from src.core.enums import UserRolesEnum
 from src.core.exceptions import (
     UserNotFoundError,
     CredentialsError,
-    DuplicateUsernameError,
+    DatabaseIntegrityError,
 )
 from src.core.schemas import UserSchema
 from src.core.security import verify_password
@@ -16,7 +16,7 @@ from src.repository.models import UserModel
 class UserRepo(BaseRepo):
     model = UserModel
 
-    async def add(self, user: dict) -> UserSchema | None:
+    async def add(self, user: dict) -> UserSchema:
         stmt = (
             insert(self.model)
             .values(**user)
@@ -31,12 +31,13 @@ class UserRepo(BaseRepo):
                 self.model.telegram,
                 self.model.instagram,
                 self.model.twitter,
+                self.model.totp_hash,
             )
         )
         try:
             raw_user = await self.execute_mappings_fetchone(stmt)
-        except IntegrityError:
-            raise DuplicateUsernameError(user["username"])
+        except IntegrityError as e:
+            raise DatabaseIntegrityError(e)
         else:
             return UserSchema(**raw_user)
 
@@ -51,7 +52,7 @@ class UserRepo(BaseRepo):
             return UserSchema(**raw_user)
         raise CredentialsError()
 
-    async def get(self, username) -> UserSchema | None:
+    async def get(self, username) -> UserSchema:
         stmt = self._select_all_columns().where(
             self.model.username == username,
         )
@@ -59,6 +60,14 @@ class UserRepo(BaseRepo):
         if raw_user is not None:
             return UserSchema(**raw_user)
         raise UserNotFoundError(username)
+
+    async def username_exists(self, username) -> bool:
+        try:
+            await self.get(username)
+        except UserNotFoundError:
+            return False
+        else:
+            return True
 
     async def execute_mappings_fetchone(self, stmt) -> dict | None:
         raw_user = await super().execute_mappings_fetchone(stmt)

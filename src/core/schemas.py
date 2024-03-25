@@ -34,12 +34,14 @@ class UserSignupSchema(_UserSchema):
 class UserSchema(UserSignupSchema):
     created: datetime
     role: UserRolesEnum
+    totp_hash: str
 
 
 class UserOutSchema(_UserSchema):
     telegram: str | None = None
     instagram: str | None = None
     twitter: str | None = None
+    qr_img: str
 
 
 class Token(BaseModel):

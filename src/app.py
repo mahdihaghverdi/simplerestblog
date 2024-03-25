@@ -8,6 +8,7 @@ from src.core.exceptions import (
     UnAuthorizedError,
     ResourceNotFoundError,
     DraftPublishedBeforeError,
+    DatabaseIntegrityError,
 )
 from src.web.auth import router as auth_router
 from src.web.comments import router as comment_router
@@ -58,4 +59,12 @@ async def draft_published_before(_, exc: DraftPublishedBeforeError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": exc.message},
+    )
+
+
+@app.exception_handler(DatabaseIntegrityError)
+async def database_integrity_error(_, exc: DatabaseIntegrityError):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": str(exc.upper_exc)},
     )

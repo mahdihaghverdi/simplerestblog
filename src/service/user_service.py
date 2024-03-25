@@ -1,11 +1,16 @@
+import base64
+import io
 from typing import Annotated
 
+import qrcode
 from fastapi import Depends
+from pyotp import random_base32, totp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.enums import UserRolesEnum
-from src.core.schemas import UserSchema, TokenData, UserSignupSchema
+from src.core.exceptions import DuplicateUsernameError
+from src.core.schemas import UserSchema, TokenData, UserSignupSchema, UserOutSchema
 from src.core.security import hash_password, validate_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
@@ -24,8 +29,12 @@ async def get_user(
 
 
 class UserService(Service[UserRepo]):
-    async def signup_user(self, user_data: UserSignupSchema) -> UserSchema:
+    async def signup_user(self, user_data: UserSignupSchema) -> UserOutSchema:
+        if await self.repo.username_exists(user_data.username):
+            raise DuplicateUsernameError(user_data.username)
+
         user_data.password = hash_password(user_data.password)
+
         if user_data.telegram is not None:
             user_data.telegram = f"https://t.me/{user_data.telegram}"
         if user_data.instagram is not None:
@@ -35,7 +44,19 @@ class UserService(Service[UserRepo]):
 
         user = user_data.model_dump()
         user["role"] = UserRolesEnum.USER.value
-        return await self.repo.add(user)
+        user["totp_hash"] = str(random_base32())
+        user_schema = await self.repo.add(user)
+
+        provisioning_uri = totp.TOTP(user_schema.totp_hash).provisioning_uri(
+            name=user_schema.username, issuer_name="SimpleRESTBlog"
+        )
+        buffered = io.BytesIO()
+        qrcode.make(provisioning_uri).save(buffered)
+
+        return UserOutSchema(
+            **user_schema.model_dump(),
+            qr_img=base64.b64encode(buffered.getvalue()).decode(),
+        )
 
     async def authenticate(self, username: str, password: str) -> UserSchema:
         return await self.repo.auth(username, password)

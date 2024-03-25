@@ -46,3 +46,8 @@ class UnAuthorisedAccessError(UnAuthorizedError):
 class DraftPublishedBeforeError(Exception):
     def __init__(self, draft_id):
         self.message = f"<Draft:{draft_id}> is published before!"
+
+
+class DatabaseIntegrityError(Exception):
+    def __init__(self, upper_exc):
+        self.upper_exc = upper_exc
