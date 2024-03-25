@@ -20,6 +20,7 @@ urlpath = "^1.2.0"
 python-slugify = "^8.0.4"
 pyotp = "^2.9.0"
 qrcode = "^7.4.2"
+redis = {extras = ["hiredis"], version = "^5.0.3"}
 
 
 [tool.poetry.group.dev.dependencies]
