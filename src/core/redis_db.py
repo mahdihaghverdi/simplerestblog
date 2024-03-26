@@ -1,5 +1,7 @@
+import asyncio
 import pickle
 
+import redis
 from redis.asyncio.client import Redis
 
 from src.core.config import settings
@@ -25,6 +27,16 @@ class RedisClient:
     def __init__(self):
         self.redis = Redis.from_url(settings.REDIS_CACHE_URL, max_connections=100)
         self._serializer = _RedisSerializer()
+
+    async def ping(self):
+        return await self.redis.ping()
+
+    def __bool__(self):
+        try:
+            asyncio.run(self.ping())
+        except (redis.exceptions.ConnectionError, ConnectionRefusedError):
+            return False
+        return True
 
     async def get(self, name: str, default=None):
         got = await self.redis.get(name)
