@@ -85,6 +85,7 @@ class UserRepo(BaseRepo):
             self.model.password,
             self.model.role,
             self.model.created,
+            self.model.totp_hash,
             self.model.name,
             self.model.bio,
             self.model.email,

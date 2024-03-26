@@ -3,7 +3,7 @@ from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.schemas import UserOutSchema, TokenData
 from src.core.security import create_access_token
 
-basic_url = f'{settings.PREFIX}/{APIPrefixesEnum.USERS.value}'
+basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}"
 
 
 def test_signup(client):
@@ -16,7 +16,7 @@ def test_signup(client):
     data = UserOutSchema(**response.json())
     assert data.username == "mahdi"
     for k, v in data.model_dump().items():
-        if k == "username":
+        if k in ["username", "qr_img"]:
             continue
         assert v is None
 
