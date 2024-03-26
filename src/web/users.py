@@ -3,11 +3,19 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from starlette.responses import Response
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
-from src.core.schemas import UserOutSchema, UserSignupSchema, UserSchema, TokenData
+from src.core.redis_db import get_redis_db, RedisClient
+from src.core.schemas import (
+    UserOutSchema,
+    UserSignupSchema,
+    UserSchema,
+    AccessTokenData,
+    UserLoginSchema,
+)
 from src.core.security import validate_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
@@ -32,6 +40,28 @@ async def signup(
     return user
 
 
+@router.post("/login")
+async def login(
+    response: Response,
+    user_login: UserLoginSchema,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis_client: Annotated[RedisClient, Depends(get_redis_db)],
+):
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo, redis_client)
+        tokens = await service.login_user(user_login)
+
+    response.set_cookie(
+        key="Refresh-Token",
+        value=tokens.refresh_token,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
+    response.headers["X-CSRF-TOKEN"] = tokens.csrf_token
+
+
 @router.get("/me", response_model=UserOutSchema, status_code=status.HTTP_200_OK)
 async def me(user: Annotated[UserSchema, Depends(get_user)]):
     return user
@@ -41,7 +71,7 @@ async def me(user: Annotated[UserSchema, Depends(get_user)]):
 async def get_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[TokenData, Depends(validate_token)],
+    token: Annotated[AccessTokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

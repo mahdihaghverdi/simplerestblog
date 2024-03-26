@@ -48,6 +48,14 @@ class DraftPublishedBeforeError(Exception):
         self.message = f"<Draft:{draft_id}> is published before!"
 
 
-class DatabaseIntegrityError(Exception):
-    def __init__(self, upper_exc):
-        self.upper_exc = upper_exc
+class DatabaseError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class DatabaseIntegrityError(DatabaseError):
+    pass
+
+
+class DatabaseConnectionError(DatabaseError):
+    pass

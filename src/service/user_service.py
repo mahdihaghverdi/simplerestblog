@@ -7,11 +7,29 @@ from fastapi import Depends
 from pyotp import random_base32, totp
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import settings
 from src.core.database import get_db
 from src.core.enums import UserRolesEnum
-from src.core.exceptions import DuplicateUsernameError
-from src.core.schemas import UserSchema, TokenData, UserSignupSchema, UserOutSchema
-from src.core.security import hash_password, validate_token
+from src.core.exceptions import (
+    DuplicateUsernameError,
+    DatabaseConnectionError,
+    CredentialsError,
+)
+from src.core.schemas import (
+    UserSchema,
+    AccessTokenData,
+    UserSignupSchema,
+    UserOutSchema,
+    Token,
+    UserLoginSchema,
+)
+from src.core.security import (
+    hash_password,
+    validate_token,
+    verify_password,
+    create_refresh_token,
+    create_csrf_token,
+)
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service import Service
@@ -19,7 +37,7 @@ from src.service import Service
 
 async def get_user(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_data: Annotated[TokenData, Depends(validate_token)],
+    token_data: Annotated[AccessTokenData, Depends(validate_token)],
 ) -> UserSchema:
     async with UnitOfWork(db):
         repo = UserRepo(db)
@@ -59,7 +77,28 @@ class UserService(Service[UserRepo]):
         )
 
     async def authenticate(self, username: str, password: str) -> UserSchema:
-        return await self.repo.auth(username, password)
+        user = await self.repo.get(username)
+        if verify_password(password, user.password):
+            return user
+        raise CredentialsError()
 
     async def get_user(self, username: str):
         return await self.repo.get(username)
+
+    async def login_user(self, user_login: UserLoginSchema) -> Token:
+        if not bool(self.redis_client):
+            raise DatabaseConnectionError("Redis connection is not initialized")
+
+        user = await self.repo.get(user_login.username)
+
+        refresh_token = create_refresh_token(user.username)
+        csrf_token = create_csrf_token(refresh_token)
+
+        await self.redis_client.set(
+            refresh_token, user.username, timeout=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+        )
+        return Token(
+            access_token=None,
+            refresh_token=refresh_token,
+            csrf_token=csrf_token,
+        )

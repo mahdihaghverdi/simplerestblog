@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 
 from src.core.config import settings
 from src.core.exceptions import CredentialsError
-from src.core.schemas import TokenData
+from src.core.schemas import AccessTokenData
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,7 +28,27 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-def create_access_token(data: TokenData) -> str:
+def create_refresh_token(username: str) -> str:
+    to_encode = {"sub": "refresh_token", "username": username}
+    expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
+    )
+    to_encode["exp"] = expire
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+
+def create_csrf_token(refresh_token) -> str:
+    to_encode = {"sub": "csrf_token", "refresh_token": refresh_token}
+    expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
+    )
+    to_encode["exp"] = expire
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+
+def create_access_token(data: AccessTokenData) -> str:
     to_encode = data.model_dump()
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -38,7 +58,7 @@ def create_access_token(data: TokenData) -> str:
     return encoded_jwt
 
 
-def decode_jwt(token) -> TokenData:
+def decode_jwt(token) -> AccessTokenData:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except InvalidTokenError:
@@ -51,9 +71,9 @@ def decode_jwt(token) -> TokenData:
         if role is None:
             raise CredentialsError()
 
-    return TokenData(username=username, role=role)
+    return AccessTokenData(username=username, role=role)
 
 
-def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
+def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> AccessTokenData:
     token_data = decode_jwt(token)
     return token_data

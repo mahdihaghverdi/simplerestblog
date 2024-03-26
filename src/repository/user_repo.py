@@ -4,11 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from src.core.enums import UserRolesEnum
 from src.core.exceptions import (
     UserNotFoundError,
-    CredentialsError,
     DatabaseIntegrityError,
 )
 from src.core.schemas import UserSchema
-from src.core.security import verify_password
 from src.repository import BaseRepo
 from src.repository.models import UserModel
 
@@ -40,17 +38,6 @@ class UserRepo(BaseRepo):
             raise DatabaseIntegrityError(e)
         else:
             return UserSchema(**raw_user)
-
-    async def auth(self, username, password) -> UserSchema:
-        stmt = self._select_all_columns().where(
-            self.model.username == username,
-        )
-        raw_user = await self.execute_mappings_fetchone(stmt)
-        if raw_user is None:
-            raise UserNotFoundError(username=username)
-        if verify_password(password, raw_user["password"]):
-            return UserSchema(**raw_user)
-        raise CredentialsError()
 
     async def get(self, username) -> UserSchema:
         stmt = self._select_all_columns().where(

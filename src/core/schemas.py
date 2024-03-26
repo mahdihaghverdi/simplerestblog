@@ -37,6 +37,11 @@ class UserSchema(UserSignupSchema):
     totp_hash: str
 
 
+class UserLoginSchema(BaseModel):
+    username: str
+    password: constr(strip_whitespace=True, min_length=8)
+
+
 class UserOutSchema(_UserSchema):
     telegram: str | None = None
     instagram: str | None = None
@@ -44,9 +49,14 @@ class UserOutSchema(_UserSchema):
     qr_img: str
 
 
+class RefreshToken(BaseModel):
+    refresh_token: str
+
+
 class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+    access_token: str | None
+    refresh_token: str
+    csrf_token: str
 
 
 class AccessTokenData(BaseModel):
