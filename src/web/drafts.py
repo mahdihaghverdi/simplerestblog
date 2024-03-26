@@ -12,7 +12,7 @@ from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     LittleDraftSchema,
     UserSchema,
-    TokenData,
+    AccessTokenData,
     DraftSchema,
     CreateDraftSchema,
     UpdateDraftSchema,
@@ -67,7 +67,7 @@ async def get_all_drafts(
 async def get_all_drafts_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[TokenData, Depends(validate_token)],
+    token: Annotated[AccessTokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
@@ -108,7 +108,7 @@ async def get_one_draft_by_username(
     username: str,
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[TokenData, Depends(validate_token)],
+    token: Annotated[AccessTokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

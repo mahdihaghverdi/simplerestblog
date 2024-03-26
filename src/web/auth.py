@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.enums import APIPrefixesEnum
-from src.core.schemas import Token, TokenData
+from src.core.schemas import Token, AccessTokenData
 from src.core.security import create_access_token
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
@@ -25,6 +25,6 @@ async def login_for_access_token(
         service = UserService(repo)
         user = await service.authenticate(form_data.username, form_data.password)
         access_token = create_access_token(
-            TokenData(username=user.username, role=user.role),
+            AccessTokenData(username=user.username, role=user.role),
         )
         return Token(access_token=access_token)

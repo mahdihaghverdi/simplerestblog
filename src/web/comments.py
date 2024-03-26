@@ -11,7 +11,7 @@ from src.core.schemas import (
     UserSchema,
     CreateCommentReplySchema,
     CommentReplySchema,
-    TokenData,
+    AccessTokenData,
 )
 from src.core.security import validate_token
 from src.repository.comment_repo import CommentReplyRepo
@@ -110,7 +110,7 @@ async def delete_comment(
     post_id: int,
     comment_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[TokenData, Depends(validate_token)],
+    token: Annotated[AccessTokenData, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

@@ -49,7 +49,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
-class TokenData(BaseModel):
+class AccessTokenData(BaseModel):
     role: UserRolesEnum | None = None
     username: str | None = None
 

@@ -9,7 +9,7 @@ from src.app import app
 from src.core.config import settings
 from src.core.database import get_db
 from src.core.enums import UserRolesEnum, APIPrefixesEnum
-from src.core.schemas import TokenData
+from src.core.schemas import AccessTokenData
 from src.core.security import hash_password, create_access_token
 from src.repository.models import UserModel, Base
 
@@ -51,7 +51,7 @@ def create_admin():
 @pytest.fixture
 def admin_access_token(create_admin):
     return create_access_token(
-        TokenData(username="admin", role=UserRolesEnum.ADMIN),
+        AccessTokenData(username="admin", role=UserRolesEnum.ADMIN),
     )
 
 
@@ -78,7 +78,7 @@ def create_mahdi():
 @pytest.fixture
 def mahdi_access_token(create_mahdi):
     return create_access_token(
-        TokenData(username="mahdi", role=UserRolesEnum.USER),
+        AccessTokenData(username="mahdi", role=UserRolesEnum.USER),
     )
 
 
