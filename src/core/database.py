@@ -7,6 +7,7 @@ AEngine = create_async_engine(settings.DATABASE_URL)
 ASession = async_sessionmaker(bind=AEngine, expire_on_commit=False)
 
 
+# TODO: Change the repo to session.begin() and make this dep singleton
 async def get_db() -> AsyncSession:
     db = ASession()
     try:

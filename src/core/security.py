@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 import jwt
-from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from passlib.context import CryptContext
+from starlette.requests import Request
 
 from src.core.config import settings
 from src.core.enums import UserRolesEnum
@@ -42,11 +41,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
-
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.PREFIX}/auth/access-token",
-)
 
 
 def encode_refresh_token(
@@ -124,6 +118,9 @@ def decode_access_token(token) -> AccessToken:
     return AccessToken(username=username, role=role)
 
 
-def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> AccessToken:
+def validate_token(request: Request) -> AccessToken:
+    token = request.cookies.get("Access-Token")
+    if token is None:
+        raise CredentialsError("Access-Token is not provided")
     token_data = decode_access_token(token)
     return token_data

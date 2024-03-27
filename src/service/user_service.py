@@ -1,15 +1,11 @@
 import asyncio
 import base64
 import io
-from typing import Annotated
 
 import qrcode
-from fastapi import Depends
 from pyotp import random_base32, totp
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
-from src.core.database import get_db
 from src.core.enums import UserRolesEnum
 from src.core.exceptions import (
     DuplicateUsernameError,
@@ -17,34 +13,20 @@ from src.core.exceptions import (
 )
 from src.core.schemas import (
     UserSchema,
-    AccessTokenData,
     UserSignupSchema,
     UserOutSchema,
     UserLoginSchema,
 )
 from src.core.security import (
     hash_password,
-    validate_token,
     verify_password,
     encode_refresh_token,
     encode_csrf_token,
     encode_access_token,
     Token,
 )
-from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service import Service
-
-
-async def get_user(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token_data: Annotated[AccessTokenData, Depends(validate_token)],
-) -> UserSchema:
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
-        service = UserService(repo)
-        user = await service.get_user(token_data.username)
-    return user
 
 
 class UserService(Service[UserRepo]):

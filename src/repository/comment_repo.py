@@ -86,7 +86,6 @@ class CommentReplyRepo(BaseRepo):
 
         _order = None
         c = aliased(self.model, name="c")
-        c2 = aliased(self.model, name="c2")
 
         match order:
             case "first":

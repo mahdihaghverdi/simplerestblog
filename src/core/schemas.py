@@ -49,15 +49,6 @@ class UserOutSchema(_UserSchema):
     qr_img: str
 
 
-class RefreshToken(BaseModel):
-    refresh_token: str
-
-
-class AccessTokenData(BaseModel):
-    role: UserRolesEnum | None = None
-    username: str | None = None
-
-
 LinkTupleType: TypeAlias = tuple[APIMethodsEnum, str] | None
 
 

@@ -6,18 +6,17 @@ from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
+from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     UserSchema,
     CreateCommentReplySchema,
     CommentReplySchema,
-    AccessTokenData,
 )
-from src.core.security import validate_token
+from src.core.security import validate_token, AccessToken
 from src.repository.comment_repo import CommentReplyRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.comment_service import CommentReplyService
-from src.service.user_service import get_user
 
 router = APIRouter(prefix=f"/{APIPrefixesEnum.COMMENTS.value}")
 
@@ -29,7 +28,7 @@ async def add_comment(
     post_id: int,
     comment: CreateCommentReplySchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = CommentReplyRepo(db)
@@ -48,7 +47,7 @@ async def add_reply(
     comment_id: int,
     reply: CreateCommentReplySchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = CommentReplyRepo(db)
@@ -94,7 +93,7 @@ async def update_comment(
     comment_id: int,
     comment: CreateCommentReplySchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = CommentReplyRepo(db)
@@ -110,7 +109,7 @@ async def delete_comment(
     post_id: int,
     comment_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessTokenData, Depends(validate_token)],
+    token: Annotated[AccessToken, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

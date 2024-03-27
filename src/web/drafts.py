@@ -8,23 +8,22 @@ from starlette.responses import RedirectResponse
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
 from src.core.database import get_db
+from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     LittleDraftSchema,
     UserSchema,
-    AccessTokenData,
     DraftSchema,
     CreateDraftSchema,
     UpdateDraftSchema,
     PublishDraftSchema,
 )
-from src.core.security import validate_token
+from src.core.security import validate_token, AccessToken
 from src.repository.draft_repo import DraftRepo
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.draft_service import DraftService
 from src.service.post_service import PostService
-from src.service.user_service import get_user
 
 router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 
@@ -33,7 +32,7 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 async def create_draft(
     draft: CreateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
@@ -49,7 +48,7 @@ async def create_draft(
 )
 async def get_all_drafts(
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
     async with UnitOfWork(db):
@@ -67,7 +66,7 @@ async def get_all_drafts(
 async def get_all_drafts_by_username(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessTokenData, Depends(validate_token)],
+    token: Annotated[AccessToken, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
@@ -90,7 +89,7 @@ async def get_all_drafts_by_username(
 async def get_one_draft(
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
@@ -108,7 +107,7 @@ async def get_one_draft_by_username(
     username: str,
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessTokenData, Depends(validate_token)],
+    token: Annotated[AccessToken, Depends(validate_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(
@@ -131,7 +130,7 @@ async def update_draft(
     draft_id: int,
     draft: UpdateDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
@@ -144,7 +143,7 @@ async def update_draft(
 async def delete_draft(
     draft_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
@@ -179,7 +178,7 @@ async def publish_draft(
     draft_id: int,
     post: PublishDraftSchema,
     db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[UserSchema, Depends(get_user)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
         repo = PostRepo(db)

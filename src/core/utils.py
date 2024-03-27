@@ -2,7 +2,7 @@ import asyncio
 import functools
 
 
-def asinglton(coro):
+def asingleton(coro):
     sentinel = instance = object()
     lock = asyncio.Lock()
 

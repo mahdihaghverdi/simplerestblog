@@ -5,7 +5,7 @@ from redis.asyncio.client import Redis
 
 from src.core.config import settings
 from src.core.exceptions import DatabaseConnectionError
-from src.core.utils import asinglton
+from src.core.utils import asingleton
 
 
 class _RedisSerializer:
@@ -50,7 +50,7 @@ class RedisClient:
         return await self.redis.ttl(name)
 
 
-@asinglton
+@asingleton
 async def get_redis_client() -> RedisClient:
     rd = RedisClient()
     try:
