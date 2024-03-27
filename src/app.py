@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from starlette import status
 from starlette.responses import JSONResponse
 
@@ -9,6 +10,7 @@ from src.core.exceptions import (
     ResourceNotFoundError,
     DraftPublishedBeforeError,
     DatabaseError,
+    ForbiddenException,
 )
 from src.web.auth import router as auth_router
 from src.web.comments import router as comment_router
@@ -27,6 +29,7 @@ app.include_router(global_router, tags=["global"])
 app.include_router(comment_router, tags=["comments"], prefix=settings.PREFIX)
 
 
+# TODO: improve the exception handlers
 @app.exception_handler(DuplicateUsernameError)
 async def duplicate_username_exception_handler(_, exc: DuplicateUsernameError):
     return JSONResponse(
@@ -68,3 +71,22 @@ async def database_integrity_error(_, exc: DatabaseError):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": exc.message},
     )
+
+
+@app.exception_handler(ForbiddenException)
+async def database_error(_, exc: DatabaseError):
+    return JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={"detail": exc.message},
+    )
+
+
+openapi_schema = get_openapi(title="SimpleRESTBlog", version="0.1.0", routes=app.routes)
+
+openapi_schema["components"]["securitySchemes"] = {
+    "HTTPBearer": {"type": "http", "scheme": "bearer", "in": "headers"},
+    "CookieAuth": {"type": "apiKey", "in": "cookie", "name": "access_token"},
+    "RefreshCookieAuth": {"type": "apiKey", "in": "cookie", "name": "refresh_token"},
+}
+
+app.openapi_schema = openapi_schema
