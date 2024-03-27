@@ -96,8 +96,8 @@ def decode_csrf_token(token) -> CSRFToken:
         return CSRFToken(refresh_token=refresh_token, access_token=access_token)
 
 
-def encode_access_token(username: str, role: UserRolesEnum) -> str:
-    to_encode = {"username": username, "role": role}
+def encode_access_token(username: str, role: UserRolesEnum, refresh_token: str) -> str:
+    to_encode = {"username": username, "role": role, "refresh_token": refresh_token}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )

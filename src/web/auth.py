@@ -42,6 +42,22 @@ async def login(
     response.headers["X-CSRF-TOKEN"] = tokens.csrf_token
 
 
+@router.post("/2fa-img")
+async def get_2fa_image(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis_client: Annotated[RedisClient, Depends(get_redis_client)],
+    username: Annotated[str, Depends(get_current_username_with_refresh)],
+) -> str:
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo, redis_client)
+        qr_img = await service.get_user_qr_img(
+            request.cookies.get("Refresh-Token"), username
+        )
+    return qr_img
+
+
 @router.post("/verify")
 async def verify(
     request: Request,

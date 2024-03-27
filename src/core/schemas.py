@@ -46,6 +46,9 @@ class UserOutSchema(_UserSchema):
     telegram: str | None = None
     instagram: str | None = None
     twitter: str | None = None
+
+
+class UserRegisterOutSchema(UserOutSchema):
     qr_img: str
 
 
