@@ -36,7 +36,8 @@ class UnAuthorizedError(Exception):
 
 
 class CredentialsError(UnAuthorizedError):
-    message = "Could not validate credentials"
+    def __init__(self, message="Could not validate credentials"):
+        self.message = message
 
 
 class UnAuthorisedAccessError(UnAuthorizedError):
@@ -59,3 +60,8 @@ class DatabaseIntegrityError(DatabaseError):
 
 class DatabaseConnectionError(DatabaseError):
     pass
+
+
+class ForbiddenException(Exception):
+    def __init__(self, message):
+        self.message = message

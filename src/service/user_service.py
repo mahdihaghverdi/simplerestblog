@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 from typing import Annotated
@@ -12,7 +13,6 @@ from src.core.database import get_db
 from src.core.enums import UserRolesEnum
 from src.core.exceptions import (
     DuplicateUsernameError,
-    DatabaseConnectionError,
     CredentialsError,
 )
 from src.core.schemas import (
@@ -20,15 +20,16 @@ from src.core.schemas import (
     AccessTokenData,
     UserSignupSchema,
     UserOutSchema,
-    Token,
     UserLoginSchema,
 )
 from src.core.security import (
     hash_password,
     validate_token,
     verify_password,
-    create_refresh_token,
-    create_csrf_token,
+    encode_refresh_token,
+    encode_csrf_token,
+    encode_access_token,
+    Token,
 )
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
@@ -86,19 +87,66 @@ class UserService(Service[UserRepo]):
         return await self.repo.get(username)
 
     async def login_user(self, user_login: UserLoginSchema) -> Token:
-        if not bool(self.redis_client):
-            raise DatabaseConnectionError("Redis connection is not initialized")
-
         user = await self.repo.get(user_login.username)
 
-        refresh_token = create_refresh_token(user.username)
-        csrf_token = create_csrf_token(refresh_token)
+        refresh_token = encode_refresh_token(user.username)
+        csrf_token = encode_csrf_token(refresh_token)
 
         await self.redis_client.set(
-            refresh_token, user.username, timeout=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+            refresh_token,
+            user.username,
+            timeout=settings.REFRESH_TOKEN_EXPIRE_MINUTES * 60,
         )
         return Token(
             access_token=None,
             refresh_token=refresh_token,
             csrf_token=csrf_token,
         )
+
+    async def verify(self, refresh_token: str, username: str, code: str):
+        in_cache_username = await self.redis_client.get(refresh_token, None)
+        if in_cache_username is None or in_cache_username != username:
+            raise CredentialsError("Invalid Refresh-Token")
+
+        user = await self.repo.get(username)
+        if not totp.TOTP(user.totp_hash).verify(code):
+            raise CredentialsError("Invalid TOTP code")
+
+        await self.redis_client.set(
+            username, True, timeout=settings.TFA_EXPIRE_MINUTES * 60
+        )
+
+    async def refresh_token(self, old_refresh: str, username: str):
+        in_cache_username, ref_ttl, verified = asyncio.gather(
+            self.redis_client.get(old_refresh),
+            self.redis_client.ttl(old_refresh),
+            self.redis_client.get(username),
+        )
+        if in_cache_username is None or in_cache_username != username:
+            raise CredentialsError("Invalid Refresh-Token")
+
+        if not verified:
+            raise CredentialsError("Please verify 2 step verification first")
+
+        user = await self.repo.get(username)
+
+        access_token = encode_access_token(username, user.role)
+        ref_expire = ref_ttl // 60
+        refresh_token = encode_refresh_token(username, ref_expire)
+        csrf_token = encode_csrf_token(refresh_token, access_token)
+
+        await asyncio.gather(
+            self.redis_client.set(refresh_token, username, timeout=ref_expire),
+            self.redis_client.delete(old_refresh),
+        )
+        return Token(access_token, refresh_token, csrf_token)
+
+    async def logout(self, refresh_token: str, username: str):
+        if refresh_token is None:
+            raise CredentialsError("Refresh-Token is not provided")
+
+        in_cache_username = await self.redis_client.get(refresh_token)
+        if in_cache_username != username:
+            raise CredentialsError("Invalid Refresh-Token")
+
+        await self.redis_client.delete(refresh_token)

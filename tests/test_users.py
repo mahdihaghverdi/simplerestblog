@@ -1,7 +1,7 @@
 from src.core.config import settings
 from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.schemas import UserOutSchema, AccessTokenData
-from src.core.security import create_access_token
+from src.core.security import encode_access_token
 
 basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}"
 
@@ -102,7 +102,7 @@ class TestAuth:
 
     def test_bad_token_username_none(self, client):
         client.post(f"{basic_url}/signup", json=self.data)
-        access_token = create_access_token(AccessTokenData(username=None))
+        access_token = encode_access_token(AccessTokenData(username=None))
         response = client.get(
             f"{basic_url}/me",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -111,7 +111,7 @@ class TestAuth:
 
     def test_bad_token_role_none(self, client):
         client.post(f"{basic_url}/signup", json=self.data)
-        access_token = create_access_token(AccessTokenData(username="mahdi", role=None))
+        access_token = encode_access_token(AccessTokenData(username="mahdi", role=None))
         response = client.get(
             f"{basic_url}/me",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -164,7 +164,7 @@ def test_users_me_with_data(client):
     }
 
     client.post(f"{basic_url}/signup", json=data)
-    access_token = create_access_token(
+    access_token = encode_access_token(
         AccessTokenData(username="mahdi", role=UserRolesEnum.USER),
     )
 

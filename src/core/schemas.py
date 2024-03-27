@@ -53,12 +53,6 @@ class RefreshToken(BaseModel):
     refresh_token: str
 
 
-class Token(BaseModel):
-    access_token: str | None
-    refresh_token: str
-    csrf_token: str
-
-
 class AccessTokenData(BaseModel):
     role: UserRolesEnum | None = None
     username: str | None = None

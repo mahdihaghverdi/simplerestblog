@@ -6,6 +6,6 @@ R = TypeVar("R")
 
 
 class Service(Generic[R]):
-    def __init__(self, repo: R, redis_client: RedisClient | None = None):
+    def __init__(self, repo: R | None, redis_client: RedisClient | None = None):
         self.repo: R = repo
         self.redis_client = redis_client

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, NamedTuple
 from zoneinfo import ZoneInfo
 
 import jwt
@@ -9,8 +9,29 @@ from jwt import InvalidTokenError
 from passlib.context import CryptContext
 
 from src.core.config import settings
+from src.core.enums import UserRolesEnum
 from src.core.exceptions import CredentialsError
-from src.core.schemas import AccessTokenData
+
+
+class RefreshToken(NamedTuple):
+    username: str
+
+
+class CSRFToken(NamedTuple):
+    refresh_token: str
+    access_token: str | None
+
+
+class AccessToken(NamedTuple):
+    username: str
+    role: UserRolesEnum
+
+
+class Token(NamedTuple):
+    access_token: str | None
+    refresh_token: str
+    csrf_token: str
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,28 +49,61 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-def create_refresh_token(username: str) -> str:
+def encode_refresh_token(
+    username: str, expire=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+) -> str:
     to_encode = {"sub": "refresh_token", "username": username}
-    expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
-        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
-    )
+    expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(minutes=expire)
     to_encode["exp"] = expire
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
-def create_csrf_token(refresh_token) -> str:
+def decode_refresh_token(token) -> RefreshToken:
+    try:
+        token_payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+    except InvalidTokenError:
+        raise CredentialsError("Invalid Refresh-Token") from None
+    else:
+        sub, username = token_payload.get("sub"), token_payload.get("username")
+        if (sub is None) or (not sub == "refresh_token") or (username is None):
+            raise CredentialsError("Invalid Refresh-Token")
+        return RefreshToken(username=username)
+
+
+def encode_csrf_token(refresh_token, access_token=None) -> str:
     to_encode = {"sub": "csrf_token", "refresh_token": refresh_token}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
         minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
     )
     to_encode["exp"] = expire
+    to_encode["access_token"] = access_token
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
-def create_access_token(data: AccessTokenData) -> str:
-    to_encode = data.model_dump()
+def decode_csrf_token(token) -> CSRFToken:
+    try:
+        token_payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+    except InvalidTokenError:
+        raise CredentialsError() from None
+    else:
+        sub, refresh_token, access_token = (
+            token_payload.get("sub"),
+            token_payload.get("refresh_token"),
+            token_payload.get("access_token"),
+        )
+        if (sub is None) or (not sub == "csrf_token") or (refresh_token is None):
+            raise CredentialsError("Invalid CSRF-Token")
+        return CSRFToken(refresh_token=refresh_token, access_token=access_token)
+
+
+def encode_access_token(username: str, role: UserRolesEnum) -> str:
+    to_encode = {"username": username, "role": role}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
@@ -58,22 +112,18 @@ def create_access_token(data: AccessTokenData) -> str:
     return encoded_jwt
 
 
-def decode_jwt(token) -> AccessTokenData:
+def decode_access_token(token) -> AccessToken:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except InvalidTokenError:
         raise CredentialsError()
     else:
-        username = payload.get("username")
-        role = payload.get("role")
-        if username is None:
+        username, role = payload.get("username"), payload.get("role")
+        if username is None or role is None:
             raise CredentialsError()
-        if role is None:
-            raise CredentialsError()
-
-    return AccessTokenData(username=username, role=role)
+    return AccessToken(username=username, role=role)
 
 
-def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> AccessTokenData:
-    token_data = decode_jwt(token)
+def validate_token(token: Annotated[str, Depends(oauth2_scheme)]) -> AccessToken:
+    token_data = decode_access_token(token)
     return token_data
