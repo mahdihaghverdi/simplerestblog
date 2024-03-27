@@ -9,5 +9,5 @@ ASession = async_sessionmaker(bind=AEngine, expire_on_commit=False)
 
 
 @asingleton
-async def get_db() -> AsyncSession:
+async def get_db_session() -> AsyncSession:
     return ASession()

@@ -118,7 +118,7 @@ def decode_access_token(token) -> AccessToken:
     return AccessToken(username=username, role=role)
 
 
-def validate_token(request: Request) -> AccessToken:
+def get_access_token(request: Request) -> AccessToken:
     token = request.cookies.get("Access-Token")
     if token is None:
         raise CredentialsError("Access-Token is not provided")

@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
@@ -18,7 +18,7 @@ from src.core.schemas import (
     UpdateDraftSchema,
     PublishDraftSchema,
 )
-from src.core.security import validate_token, AccessToken
+from src.core.security import get_access_token, AccessToken
 from src.repository.draft_repo import DraftRepo
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
@@ -31,7 +31,7 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.DRAFTS.value}")
 @router.post("/", response_model=DraftSchema, status_code=status.HTTP_201_CREATED)
 async def create_draft(
     draft: CreateDraftSchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -47,7 +47,7 @@ async def create_draft(
     status_code=status.HTTP_200_OK,
 )
 async def get_all_drafts(
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
@@ -65,8 +65,8 @@ async def get_all_drafts(
 )
 async def get_all_drafts_by_username(
     username: str,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessToken, Depends(validate_token)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
@@ -88,7 +88,7 @@ async def get_all_drafts_by_username(
 @router.get("/{draft_id}", response_model=DraftSchema, status_code=status.HTTP_200_OK)
 async def get_one_draft(
     draft_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -106,8 +106,8 @@ async def get_one_draft(
 async def get_one_draft_by_username(
     username: str,
     draft_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessToken, Depends(validate_token)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(
@@ -129,7 +129,7 @@ async def get_one_draft_by_username(
 async def update_draft(
     draft_id: int,
     draft: UpdateDraftSchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -142,7 +142,7 @@ async def update_draft(
 @router.delete("/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_draft(
     draft_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -159,7 +159,7 @@ async def delete_draft(
 async def open_read(
     username: str,
     slug: str,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     async with UnitOfWork(db):
         repo = DraftRepo(db)
@@ -177,7 +177,7 @@ async def publish_draft(
     reqeust: Request,
     draft_id: int,
     post: PublishDraftSchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):

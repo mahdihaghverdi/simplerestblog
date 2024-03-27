@@ -7,7 +7,7 @@ from starlette.testclient import TestClient
 
 from src.app import app
 from src.core.config import settings
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.schemas import AccessTokenData
 from src.core.security import hash_password, encode_access_token
@@ -30,7 +30,7 @@ async def get_db_mock():
         await db.close()
 
 
-app.dependency_overrides[get_db] = get_db_mock
+app.dependency_overrides[get_db_session] = get_db_mock
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.depends import (
     get_current_username_with_refresh,
     get_current_username_with_access,
@@ -24,7 +24,7 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.AUTH.value}")
 async def login(
     response: Response,
     user_login: UserLoginSchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
 ):
     async with UnitOfWork(db):
@@ -45,7 +45,7 @@ async def login(
 @router.post("/2fa-img")
 async def get_2fa_image(
     request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ) -> str:
@@ -62,7 +62,7 @@ async def get_2fa_image(
 async def verify(
     request: Request,
     code: str,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ):
@@ -80,7 +80,7 @@ async def verify(
 async def refresh(
     request: Request,
     response: Response,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ):

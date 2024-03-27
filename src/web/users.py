@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
@@ -13,7 +13,7 @@ from src.core.schemas import (
     UserSignupSchema,
     UserSchema,
 )
-from src.core.security import validate_token, AccessToken
+from src.core.security import get_access_token, AccessToken
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
@@ -24,7 +24,7 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.USERS.value}")
 @router.post("/signup", response_model=UserOutSchema, status_code=status.HTTP_201_CREATED)
 async def signup(
     user_data: UserSignupSchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     async with UnitOfWork(db):
         repo = UserRepo(db)
@@ -41,8 +41,8 @@ async def me(user: Annotated[UserSchema, Depends(get_current_user_from_db)]):
 @router.get("/{username}", response_model=UserOutSchema, status_code=status.HTTP_200_OK)
 async def get_by_username(
     username: str,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessToken, Depends(validate_token)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

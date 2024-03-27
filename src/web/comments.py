@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
@@ -13,7 +13,7 @@ from src.core.schemas import (
     CreateCommentReplySchema,
     CommentReplySchema,
 )
-from src.core.security import validate_token, AccessToken
+from src.core.security import get_access_token, AccessToken
 from src.repository.comment_repo import CommentReplyRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.comment_service import CommentReplyService
@@ -27,7 +27,7 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.COMMENTS.value}")
 async def add_comment(
     post_id: int,
     comment: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -46,7 +46,7 @@ async def add_reply(
     post_id: int,
     comment_id: int,
     reply: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -59,7 +59,7 @@ async def add_reply(
 @router.get("/{post_id}", response_model=list[CommentReplySchema])
 async def get_comments(
     post_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     page: Annotated[int, Query(ge=1)] = 1,
     how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
     order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
@@ -75,7 +75,7 @@ async def get_comments(
 async def get_replies(
     post_id: int,
     comment_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     page: Annotated[int, Query(ge=1)] = 1,
     how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
     order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
@@ -92,7 +92,7 @@ async def update_comment(
     post_id: int,
     comment_id: int,
     comment: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
     async with UnitOfWork(db):
@@ -108,8 +108,8 @@ async def update_comment(
 async def delete_comment(
     post_id: int,
     comment_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[AccessToken, Depends(validate_token)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(

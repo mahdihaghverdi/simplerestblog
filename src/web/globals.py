@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.schemas import PostSchema
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
@@ -14,10 +14,14 @@ router = APIRouter()
 
 
 @router.get(
-    "/@{username}/{link}", response_model=PostSchema, status_code=status.HTTP_200_OK,
+    "/@{username}/{link}",
+    response_model=PostSchema,
+    status_code=status.HTTP_200_OK,
 )
 async def get_global(
-    username: str, link: str, db: Annotated[AsyncSession, Depends(get_db)],
+    username: str,
+    link: str,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     async with UnitOfWork(db):
         repo = PostRepo(db)

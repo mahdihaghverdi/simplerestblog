@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
-from src.core.database import get_db
+from src.core.database import get_db_session
 from src.core.exceptions import ForbiddenException, CredentialsError
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.repository.unitofwork import UnitOfWork
@@ -54,7 +54,7 @@ async def get_current_username_with_access(
 
 
 async def get_current_user_from_db(
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
     username: Annotated[str, Depends(get_current_username_with_access)],
 ):
     async with UnitOfWork(db):
