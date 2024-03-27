@@ -1,11 +1,22 @@
-class ResourceNotFoundError(Exception):
-    def __init__(self, message):
+from http import HTTPStatus
+
+
+class Error(Exception):
+    code: int
+    code_message: str
+
+    def __init__(self, message=None):
         self.message = message
+
+
+class ResourceNotFoundError(Error):
+    code = HTTPStatus.NOT_FOUND.value
+    code_message = HTTPStatus.NOT_FOUND.description
 
 
 class UserNotFoundError(ResourceNotFoundError):
     def __init__(self, username):
-        self.message = f"User {username!r} is not found!"
+        self.message = f"<User:{username!r}> is not found!"
 
 
 class DraftNotFoundError(ResourceNotFoundError):
@@ -23,16 +34,24 @@ class CommentNotFoundError(ResourceNotFoundError):
         self.message = f"<Comment:{comment_id} is not found!"
 
 
-class DuplicateUsernameError(Exception):
+class BadRequestError(Error):
+    code = HTTPStatus.BAD_REQUEST.value
+    code_message = HTTPStatus.BAD_REQUEST.description
+
+
+class DuplicateUsernameError(BadRequestError):
     def __init__(self, username):
         self.message = f"username: {username!r} already exists!"
 
-    def __str__(self):
-        return self.message
+
+class DraftPublishedBeforeError(BadRequestError):
+    def __init__(self, draft_id):
+        self.message = f"<Draft:{draft_id}> is published before!"
 
 
-class UnAuthorizedError(Exception):
-    message: str = "Unauthorized Access!"
+class UnAuthorizedError(Error):
+    code = HTTPStatus.UNAUTHORIZED.value
+    code_message = HTTPStatus.UNAUTHORIZED.description
 
 
 class CredentialsError(UnAuthorizedError):
@@ -44,14 +63,13 @@ class UnAuthorisedAccessError(UnAuthorizedError):
     message = "Invalid access. You are not allowed to access this route"
 
 
-class DraftPublishedBeforeError(Exception):
-    def __init__(self, draft_id):
-        self.message = f"<Draft:{draft_id}> is published before!"
+class InternalServerError(Error):
+    code = HTTPStatus.INTERNAL_SERVER_ERROR
+    code_message = HTTPStatus.INTERNAL_SERVER_ERROR.description
 
 
-class DatabaseError(Exception):
-    def __init__(self, message):
-        self.message = message
+class DatabaseError(InternalServerError):
+    pass
 
 
 class DatabaseIntegrityError(DatabaseError):
@@ -62,6 +80,6 @@ class DatabaseConnectionError(DatabaseError):
     pass
 
 
-class ForbiddenException(Exception):
-    def __init__(self, message):
-        self.message = message
+class ForbiddenException(Error):
+    code = HTTPStatus.FORBIDDEN
+    code_message = HTTPStatus.FORBIDDEN.description
