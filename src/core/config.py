@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     API_VERSION: str
     SECRET_KEY: str
     ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 2 * 60  # two hours
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 2 * 24 * 60  # two days
+    TFA_EXPIRE_MINUTES: int = 2 * 24 * 60  # two days
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @property
