@@ -1,10 +1,11 @@
-import asyncio
 import pickle
 
 import redis
 from redis.asyncio.client import Redis
 
 from src.core.config import settings
+from src.core.exceptions import DatabaseConnectionError
+from src.core.utils import asinglton
 
 
 class _RedisSerializer:
@@ -31,13 +32,6 @@ class RedisClient:
     async def ping(self):
         return await self.redis.ping()
 
-    def __bool__(self):
-        try:
-            asyncio.run(self.ping())
-        except (redis.exceptions.ConnectionError, ConnectionRefusedError):
-            return False
-        return True
-
     async def get(self, name: str, default=None):
         got = await self.redis.get(name)
         return default if got is None else self._serializer.loads(got)
@@ -52,6 +46,16 @@ class RedisClient:
     async def delete(self, *names):
         return bool(await self.redis.delete(*names))
 
+    async def ttl(self, name) -> int:
+        return await self.redis.ttl(name)
 
-def get_redis_db():
-    return RedisClient()
+
+@asinglton
+async def get_redis_client() -> RedisClient:
+    rd = RedisClient()
+    try:
+        await rd.ping()
+    except (redis.exceptions.ConnectionError, ConnectionRefusedError):
+        raise DatabaseConnectionError("Redis connection is not initialized")
+    else:
+        return rd
