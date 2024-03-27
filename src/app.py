@@ -4,6 +4,7 @@ from starlette.responses import JSONResponse
 
 from src.core.config import settings
 from src.core.exceptions import Error
+from src.core.utils import HTTP, APIKey
 from src.web.auth import router as auth_router
 from src.web.comments import router as comment_router
 from src.web.drafts import router as draft_router
@@ -37,9 +38,9 @@ async def handler_error_exception(_, exc: Error):
 openapi_schema = get_openapi(title="SimpleRESTBlog", version="0.1.0", routes=app.routes)
 
 openapi_schema["components"]["securitySchemes"] = {
-    "HTTPBearer": {"type": "http", "scheme": "bearer", "in": "headers"},
-    "CookieAuth": {"type": "apiKey", "in": "cookie", "name": "access_token"},
-    "RefreshCookieAuth": {"type": "apiKey", "in": "cookie", "name": "refresh_token"},
+    "HTTPBearer": HTTP(scheme="bearer", in_="header").dump(),
+    "CookieAuth": APIKey(in_="cookie", name="access_token").dump(),
+    "RefreshCookieAuth": APIKey(in_="cookie", name="refresh_token").dump(),
 }
 
 app.openapi_schema = openapi_schema

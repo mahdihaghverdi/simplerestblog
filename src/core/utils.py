@@ -3,6 +3,7 @@ import base64
 import functools
 import hashlib
 import io
+from typing import NamedTuple
 
 import qrcode
 from pyotp import totp
@@ -38,3 +39,19 @@ def create_totp_qr_img(user_schema: UserSchema) -> str:
 
 def sha256_username(username):
     return hashlib.sha256(username.encode()).hexdigest()
+
+
+class HTTP(NamedTuple):
+    scheme: str
+    in_: str
+
+    def dump(self):
+        return {"type": "http", "scheme": self.scheme, "in": self.in_}
+
+
+class APIKey(NamedTuple):
+    in_: str
+    name: str
+
+    def dump(self):
+        return {"type": "apiKey", "in": self.in_, "name": self.name}
