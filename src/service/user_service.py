@@ -7,6 +7,7 @@ from src.core.enums import UserRolesEnum
 from src.core.exceptions import (
     DuplicateUsernameError,
     CredentialsError,
+    ForbiddenError,
 )
 from src.core.schemas import (
     UserSignupSchema,
@@ -78,7 +79,7 @@ class UserService(Service[UserRepo]):
 
     async def _check_refresh_token(self, refresh_token, username):
         if refresh_token is None:
-            raise CredentialsError("Refresh-Token is not provided")
+            raise ForbiddenError("Refresh-Token is not provided")
         in_cache_username = await self.redis_client.get(refresh_token)
         if in_cache_username != username:
             raise CredentialsError("Invalid Refresh-Token")
@@ -94,6 +95,9 @@ class UserService(Service[UserRepo]):
         )
 
     async def refresh_token(self, old_refresh: str, username: str):
+        if old_refresh is None:
+            raise ForbiddenError("Refresh-Token is not provided")
+
         in_cache_username, ref_ttl, verified = await asyncio.gather(
             self.redis_client.get(old_refresh),
             self.redis_client.ttl(old_refresh),

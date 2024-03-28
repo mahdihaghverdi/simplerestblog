@@ -80,6 +80,6 @@ class DatabaseConnectionError(DatabaseError):
     pass
 
 
-class ForbiddenException(Error):
+class ForbiddenError(Error):
     code = HTTPStatus.FORBIDDEN
     code_message = HTTPStatus.FORBIDDEN.description

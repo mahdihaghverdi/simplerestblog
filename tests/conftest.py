@@ -1,36 +1,40 @@
 import asyncio
 
 import pytest
-from sqlalchemy import NullPool, insert
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy import insert
 from starlette.testclient import TestClient
 
 from src.app import app
 from src.core.config import settings
 from src.core.database import get_db_session
-from src.core.enums import UserRolesEnum, APIPrefixesEnum
-from src.core.schemas import AccessTokenData
-from src.core.security import hash_password, encode_access_token
+from src.core.enums import APIPrefixesEnum
+from src.core.redis_db import get_redis_client
+from src.core.security import hash_password
 from src.repository.models import UserModel, Base
-
-AEngineMock = create_async_engine(str(settings.TEST_DATABASE_URL), poolclass=NullPool)
-ASessionMock = async_sessionmaker(
-    bind=AEngineMock,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
-
-
-async def get_db_mock():
-    db = ASessionMock()
-    try:
-        yield db
-    finally:
-        await db.close()
-
+from tests.database import get_db_mock, ASessionMock, AEngineMock
+from tests.redis_db import get_redis_client_mock
 
 app.dependency_overrides[get_db_session] = get_db_mock
+app.dependency_overrides[get_redis_client] = get_redis_client_mock
+
+base_url = f"{settings.PREFIX}/"
+
+
+async def create_all():
+    async with AEngineMock.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def drop_all():
+    async with AEngineMock.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(scope="function")
+def client():
+    asyncio.run(create_all())
+    yield TestClient(app=app)
+    asyncio.run(drop_all())
 
 
 @pytest.fixture
@@ -50,9 +54,10 @@ def create_admin():
 
 @pytest.fixture
 def admin_access_token(create_admin):
-    return encode_access_token(
-        AccessTokenData(username="admin", role=UserRolesEnum.ADMIN),
-    )
+    # return encode_access_token(
+    #     AccessTokenData(username="admin", role=UserRolesEnum.ADMIN),
+    # )
+    pass
 
 
 @pytest.fixture
@@ -77,9 +82,10 @@ def create_mahdi():
 
 @pytest.fixture
 def mahdi_access_token(create_mahdi):
-    return encode_access_token(
-        AccessTokenData(username="mahdi", role=UserRolesEnum.USER),
-    )
+    # return encode_access_token(
+    #     AccessTokenData(username="mahdi", role=UserRolesEnum.USER),
+    # )
+    pass
 
 
 @pytest.fixture
@@ -112,20 +118,3 @@ def comment_id_fixture(client, mahdi_auth_headers, post_id_fixture):
         headers=mahdi_auth_headers,
     ).json()["id"]
     return comment_id
-
-
-async def create_all():
-    async with AEngineMock.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def drop_all():
-    async with AEngineMock.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture(scope="function")
-def client():
-    asyncio.run(create_all())
-    yield TestClient(app=app)
-    asyncio.run(drop_all())
