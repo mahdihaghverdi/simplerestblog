@@ -4,9 +4,10 @@ from http import HTTPStatus
 
 from pyotp import totp
 
+from src.core.enums import UserRolesEnum
 from src.core.exceptions import CredentialsError
 from src.core.schemas import UserOutSchema
-from src.core.security import decode_refresh_token, decode_csrf_token
+from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.core.utils import sha256_username
 from .conftest import base_url
 from ..redis_db import get_redis_client_mock
@@ -198,3 +199,82 @@ class TestVerify(BaseTest, RefreshTokenMixin):
             return asyncio.run(_get())
 
         assert get() is True
+
+
+class TestRefresh(BaseTest, RefreshTokenMixin):
+    url = base_url + "/refresh"
+
+    def test_not_2_step_verified(self, client, login_mahdi):
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(login_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(login_mahdi.refresh_token),
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.UNAUTHORIZED.description
+        assert message == "Please verify 2 step verification first"
+
+    def test_once(self, client, verified_mahdi):
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(verified_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(verified_mahdi.refresh_token),
+        )
+        assert response.status_code == 200, response.text
+
+        refresh_token = response.cookies.get("Refresh-Token")
+        access_token = response.cookies.get("Access-Token")
+        x_csrf_token = response.headers.get("x-csrf-token")
+
+        assert refresh_token is not None
+        assert access_token is not None
+        assert x_csrf_token is not None
+
+        refresh_token_nt = decode_refresh_token(refresh_token)
+        assert refresh_token_nt.username == username
+
+        access_token_nt = decode_access_token(access_token)
+        assert access_token_nt.username == username
+        assert access_token_nt.role == UserRolesEnum.USER.value
+
+        csrf_token = decode_csrf_token(x_csrf_token)
+        assert csrf_token.refresh_token == refresh_token
+        assert csrf_token.access_token == access_token
+
+    def test_twice(self, client, verified_mahdi):
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(verified_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(verified_mahdi.refresh_token),
+        )
+        refresh_token = response.cookies.get("Refresh-Token")
+        x_csrf_token = response.headers.get("x-csrf-token")
+
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(x_csrf_token),
+            cookies=self.make_auth_cookies(refresh_token),
+        )
+
+        assert response.status_code == 200, response.text
+
+        refresh_token = response.cookies.get("Refresh-Token")
+        access_token = response.cookies.get("Access-Token")
+        x_csrf_token = response.headers.get("x-csrf-token")
+
+        assert refresh_token is not None
+        assert access_token is not None
+        assert x_csrf_token is not None
+
+        refresh_token_nt = decode_refresh_token(refresh_token)
+        assert refresh_token_nt.username == username
+
+        access_token_nt = decode_access_token(access_token)
+        assert access_token_nt.username == username
+        assert access_token_nt.role == UserRolesEnum.USER.value
+
+        csrf_token = decode_csrf_token(x_csrf_token)
+        assert csrf_token.refresh_token == refresh_token
+        assert csrf_token.access_token == access_token

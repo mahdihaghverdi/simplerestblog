@@ -2,6 +2,7 @@ import asyncio
 from collections import namedtuple
 
 import pytest
+from pyotp import totp
 from sqlalchemy import select
 
 from src.core.enums import APIPrefixesEnum
@@ -42,3 +43,18 @@ def get_mahdi_totp_hash():
                 return (await session.execute(stmt)).scalar_one()
 
     return asyncio.run(setup())
+
+
+@pytest.fixture
+def verified_mahdi(client, login_mahdi, get_mahdi_totp_hash):
+    totp_hash = get_mahdi_totp_hash
+    uri = totp.TOTP(totp_hash)
+    current = uri.now()
+
+    client.post(
+        base_url + "/verify",
+        params={"code": str(current)},
+        headers={"Authorization": f"Bearer {login_mahdi.csrf_token}"},
+        cookies={"Refresh-Token": login_mahdi.refresh_token},
+    )
+    yield login_mahdi
