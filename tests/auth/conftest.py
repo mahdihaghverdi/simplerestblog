@@ -14,14 +14,15 @@ base_url = base_url + f"{APIPrefixesEnum.AUTH.value}"
 
 data = {"username": "mahdi", "password": "12345678"}
 
+LoginData = namedtuple("LoginData", "refresh_token, csrf_token")
+
+RefreshedData = namedtuple("RefreshedData", "refresh_token, access_token, csrf_token")
+
 
 @pytest.fixture
 def signup_mahdi(client):
     client.post(base_url + "/signup", json=data)
     yield
-
-
-LoginData = namedtuple("LoginData", "refresh_token, csrf_token")
 
 
 @pytest.fixture
@@ -58,3 +59,17 @@ def verified_mahdi(client, login_mahdi, get_mahdi_totp_hash):
         cookies={"Refresh-Token": login_mahdi.refresh_token},
     )
     yield login_mahdi
+
+
+@pytest.fixture
+def refreshed_mahdi(client, verified_mahdi):
+    response = client.post(
+        base_url + "/refresh",
+        headers={"Authorization": f"Bearer {verified_mahdi.csrf_token}"},
+        cookies={"Refresh-Token": verified_mahdi.refresh_token},
+    )
+    refresh_token = response.cookies.get("Refresh-Token")
+    access_token = response.cookies.get("Access-Token")
+    x_csrf_token = response.headers.get("x-csrf-token")
+
+    return RefreshedData(refresh_token, access_token, x_csrf_token)

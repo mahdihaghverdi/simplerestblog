@@ -39,8 +39,12 @@ class BaseTest:
         return {"Authorization": f"Bearer {csrf_token}"}
 
     @staticmethod
-    def make_auth_cookies(refresh_token):
-        return {"Refresh-Token": refresh_token}
+    def make_auth_cookies(refresh_token, access_token=None):
+        base = {"Refresh-Token": refresh_token}
+        if access_token:
+            base.update([("Access-Token", access_token)])
+            return base
+        return base
 
 
 class RefreshTokenMixin:
@@ -278,3 +282,35 @@ class TestRefresh(BaseTest, RefreshTokenMixin):
         csrf_token = decode_csrf_token(x_csrf_token)
         assert csrf_token.refresh_token == refresh_token
         assert csrf_token.access_token == access_token
+
+
+class TestLogout(BaseTest, RefreshTokenMixin):
+    url = base_url + "/logout"
+
+    def test_logout(self, client, refreshed_mahdi):
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(refreshed_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(
+                refreshed_mahdi.refresh_token, refreshed_mahdi.access_token
+            ),
+        )
+        assert response.status_code == 200, response.text
+
+        refresh_token = response.cookies.get("Refresh-Token")
+        access_token = response.cookies.get("Access-Token")
+
+        assert refresh_token == '""'
+        assert access_token == '""'
+
+        def get():
+            async def _get():
+                rd = await get_redis_client_mock()
+                ref_ = await rd.get(refreshed_mahdi.refresh_token)
+                sha_ = await rd.get(sha256_username("mahdi"))
+                return ref_, sha_
+
+            return asyncio.run(_get())
+
+        ref, sha = get()
+        assert ref is sha is None

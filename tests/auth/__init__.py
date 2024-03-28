@@ -50,7 +50,6 @@ Test scenarios:
         - Successful
             test refresh is deleted from redis
             test sha256_username is deleted from redis
-        - Test no access to 2fa-img, verify and refresh (no csrf_token header)
 
     7. /users/me (Just test the Access-Token)
         - Unsuccessful due to not providing the Access-Token (`ForbiddenError`)
