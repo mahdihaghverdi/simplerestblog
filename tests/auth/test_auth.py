@@ -4,7 +4,8 @@ from http import HTTPStatus
 
 from pyotp import totp
 
-from src.core.enums import UserRolesEnum
+from src.core.config import settings
+from src.core.enums import UserRolesEnum, APIPrefixesEnum
 from src.core.exceptions import CredentialsError
 from src.core.schemas import UserOutSchema
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
@@ -314,3 +315,48 @@ class TestLogout(BaseTest, RefreshTokenMixin):
 
         ref, sha = get()
         assert ref is sha is None
+
+
+class TestAccessToken(BaseTest):
+    url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}/me"
+
+    def test_not_pass_access_token(self, client, login_mahdi):
+        response = client.get(
+            self.url,
+            headers=self.make_auth_headers(login_mahdi.csrf_token),
+        )
+        assert response.status_code == HTTPStatus.FORBIDDEN.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.FORBIDDEN.description
+        assert message == "Access-Token is not provided"
+
+    def test_not_invalid_access_token(self, client, refreshed_mahdi):
+        invalid_access_token = refreshed_mahdi.access_token.translate(
+            str.maketrans({"a": "b"})
+        )
+        response = client.get(
+            self.url,
+            headers=self.make_auth_headers(refreshed_mahdi.csrf_token),
+            cookies={"Access-Token": invalid_access_token},
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.UNAUTHORIZED.description
+        assert message == "Could not validate credentials"
+
+    def test_me(self, client, refreshed_mahdi):
+        response = client.get(
+            self.url,
+            headers=self.make_auth_headers(refreshed_mahdi.csrf_token),
+            cookies={"Access-Token": refreshed_mahdi.access_token},
+        )
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert data["username"] == username
+        for k, v in data.items():
+            if k in ["username", "qr_img"]:
+                continue
+            assert v is None
