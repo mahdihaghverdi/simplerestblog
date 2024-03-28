@@ -1,10 +1,15 @@
+import asyncio
 import base64
 from http import HTTPStatus
+
+from pyotp import totp
 
 from src.core.exceptions import CredentialsError
 from src.core.schemas import UserOutSchema
 from src.core.security import decode_refresh_token, decode_csrf_token
+from src.core.utils import sha256_username
 from .conftest import base_url
+from ..redis_db import get_redis_client_mock
 
 username = "mahdi"
 password = "12345678"
@@ -31,6 +36,10 @@ class BaseTest:
     @staticmethod
     def make_auth_headers(csrf_token):
         return {"Authorization": f"Bearer {csrf_token}"}
+
+    @staticmethod
+    def make_auth_cookies(refresh_token):
+        return {"Refresh-Token": refresh_token}
 
 
 class RefreshTokenMixin:
@@ -144,9 +153,48 @@ class TestQrImg(BaseTest, RefreshTokenMixin):
         response = client.post(
             self.url,
             headers=self.make_auth_headers(login_mahdi.csrf_token),
-            cookies={"Refresh-Token": login_mahdi.refresh_token},
+            cookies=self.make_auth_cookies(login_mahdi.refresh_token),
         )
         assert response.status_code == 200, response.text
 
         img = response.text
         assert f'"{base64.b64encode(base64.b64decode(img)).decode()}"' == img
+
+
+class TestVerify(BaseTest, RefreshTokenMixin):
+    url = base_url + "/verify"
+
+    def test_invalid_totp(self, client, login_mahdi):
+        response = client.post(
+            self.url,
+            params={"code": "111111"},
+            headers=self.make_auth_headers(login_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(login_mahdi.refresh_token),
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.UNAUTHORIZED.description
+        assert message == "Invalid TOTP code"
+
+    def test_verify(self, client, login_mahdi, get_mahdi_totp_hash):
+        totp_hash = get_mahdi_totp_hash
+        uri = totp.TOTP(totp_hash)
+        current = uri.now()
+
+        response = client.post(
+            self.url,
+            params={"code": str(current)},
+            headers=self.make_auth_headers(login_mahdi.csrf_token),
+            cookies=self.make_auth_cookies(login_mahdi.refresh_token),
+        )
+        assert response.status_code == 200, response.text
+
+        def get():
+            async def _get():
+                rd = await get_redis_client_mock()
+                return await rd.get(sha256_username("mahdi"))
+
+            return asyncio.run(_get())
+
+        assert get() is True
