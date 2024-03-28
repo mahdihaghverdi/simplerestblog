@@ -10,7 +10,6 @@ from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
     UserOutSchema,
-    UserSignupSchema,
     UserSchema,
 )
 from src.core.security import get_access_token, AccessToken
@@ -19,18 +18,6 @@ from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
 
 router = APIRouter(prefix=f"/{APIPrefixesEnum.USERS.value}")
-
-
-@router.post("/signup", response_model=UserOutSchema, status_code=status.HTTP_201_CREATED)
-async def signup(
-    user_data: UserSignupSchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
-        service = UserService(repo)
-        user = await service.signup_user(user_data)
-    return user
 
 
 @router.get("/me", response_model=UserOutSchema, status_code=status.HTTP_200_OK)

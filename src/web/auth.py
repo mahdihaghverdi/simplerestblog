@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -12,12 +13,24 @@ from src.core.depends import (
 )
 from src.core.enums import APIPrefixesEnum
 from src.core.redis_db import RedisClient, get_redis_client
-from src.core.schemas import UserLoginSchema
+from src.core.schemas import UserLoginSchema, UserSignupSchema, UserOutSchema
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
 
 router = APIRouter(prefix=f"/{APIPrefixesEnum.AUTH.value}")
+
+
+@router.post("/signup", response_model=UserOutSchema, status_code=status.HTTP_201_CREATED)
+async def signup(
+    user_data: UserSignupSchema,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    async with UnitOfWork(db):
+        repo = UserRepo(db)
+        service = UserService(repo)
+        user = await service.signup_user(user_data)
+    return user
 
 
 @router.post("/login")
