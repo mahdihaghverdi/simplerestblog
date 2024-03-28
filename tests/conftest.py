@@ -12,7 +12,7 @@ from src.core.redis_db import get_redis_client
 from src.core.security import hash_password
 from src.repository.models import UserModel, Base
 from tests.database import get_db_mock, ASessionMock, AEngineMock
-from tests.redis_db import get_redis_client_mock
+from tests.redis_db import get_redis_client_mock, clear_database
 
 app.dependency_overrides[get_db_session] = get_db_mock
 app.dependency_overrides[get_redis_client] = get_redis_client_mock
@@ -33,7 +33,9 @@ async def drop_all():
 @pytest.fixture(scope="function")
 def client():
     asyncio.run(create_all())
+    clear_database()
     yield TestClient(app=app)
+    clear_database()
     asyncio.run(drop_all())
 
 

@@ -12,6 +12,20 @@ from tests.database import ASessionMock
 
 base_url = base_url + f"{APIPrefixesEnum.AUTH.value}"
 
+username = "mahdi"
+password = "12345678"
+simple_signup_data = {"username": username, "password": password}
+signup_data = {
+    "username": "Mahdi",
+    "password": "12345678",
+    "name": "Mahdi Haghverdi",
+    "bio": "Hi I am a writer",
+    "email": "mahdi@mahdi.com",
+    "telegram": "@pyeafp",
+    "instagram": "mah.dihaghverdi",
+    "twitter": "@mliewpl",
+}
+login_data = {"username": username, "password": password}
 data = {"username": "mahdi", "password": "12345678"}
 
 LoginData = namedtuple("LoginData", "refresh_token, csrf_token")

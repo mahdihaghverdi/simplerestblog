@@ -10,22 +10,8 @@ from src.core.exceptions import CredentialsError
 from src.core.schemas import UserOutSchema
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.core.utils import sha256_username
-from .conftest import base_url
+from .conftest import base_url, simple_signup_data, username, signup_data, login_data
 from ..redis_db import get_redis_client_mock
-
-username = "mahdi"
-password = "12345678"
-simple_signup_data = {"username": username, "password": password}
-signup_data = {
-    "username": "Mahdi",
-    "password": "12345678",
-    "name": "Mahdi Haghverdi",
-    "bio": "Hi I am a writer",
-    "email": "mahdi@mahdi.com",
-    "telegram": "@pyeafp",
-    "instagram": "mah.dihaghverdi",
-    "twitter": "@mliewpl",
-}
 
 
 class BaseTest:
@@ -108,9 +94,6 @@ class TestSignup(BaseTest):
         code_message, message = self.extract_error_message(response.json())
         assert code_message == HTTPStatus.BAD_REQUEST.description
         assert message == f"username: {username!r} already exists!"
-
-
-login_data = {"username": username, "password": password}
 
 
 class TestLogin(BaseTest):
@@ -285,8 +268,34 @@ class TestRefresh(BaseTest, RefreshTokenMixin):
         assert csrf_token.access_token == access_token
 
 
-class TestLogout(BaseTest, RefreshTokenMixin):
+class TestLogout(BaseTest):
     url = base_url + "/logout"
+
+    def test_not_pass_access_token(self, client, login_mahdi):
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(login_mahdi.csrf_token),
+        )
+        assert response.status_code == HTTPStatus.FORBIDDEN.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.FORBIDDEN.description
+        assert message == "Access-Token is not provided"
+
+    def test_not_invalid_access_token(self, client, refreshed_mahdi):
+        invalid_access_token = refreshed_mahdi.access_token.translate(
+            str.maketrans({"a": "b"})
+        )
+        response = client.post(
+            self.url,
+            headers=self.make_auth_headers(refreshed_mahdi.csrf_token),
+            cookies={"Access-Token": invalid_access_token},
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED.value, response.text
+
+        code_message, message = self.extract_error_message(response.json())
+        assert code_message == HTTPStatus.UNAUTHORIZED.description
+        assert message == "Could not validate credentials"
 
     def test_logout(self, client, refreshed_mahdi):
         response = client.post(

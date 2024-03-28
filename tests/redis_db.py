@@ -1,23 +1,26 @@
 from src.core.utils import asingleton
 
+database = {}
+
 
 class RedisClientMock:
-    def __init__(self):
-        self.database = {}
-
     async def get(self, name: str, default=None):
-        return self.database.get(name, default)
+        return database.get(name, default)
 
     async def set(self, name, value, timeout):
-        self.database[name] = value
+        database[name] = value
         return True
 
     async def delete(self, *names):
         for name in names:
-            self.database.pop(name)
+            database.pop(name)
 
     async def ttl(self, name) -> int:
         return 100
+
+
+def clear_database():
+    database.clear()
 
 
 @asingleton

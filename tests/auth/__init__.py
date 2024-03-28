@@ -45,8 +45,8 @@ Test scenarios:
         - Repeat successful
 
     6. /logout
-        - Unsuccessful due to not passing the Refresh-Token (`ForbiddenError`)
-        - Unsuccessful due to invalid Refresh-Token passing (`CredentialsError`)
+        - Unsuccessful due to not providing the Access-Token (`ForbiddenError`)
+        - Unsuccessful due to wrong Access-Token (`CredentialsError`)
         - Successful
             test refresh is deleted from redis
             test sha256_username is deleted from redis
