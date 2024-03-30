@@ -1,12 +1,13 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 class UnitOfWork:
-    def __init__(self, session):
-        self.session: AsyncSession = session
+    def __init__(self, session_maker):
+        self.session_maker: async_sessionmaker = session_maker
 
     async def __aenter__(self):
-        return self
+        self.session = self.session_maker()
+        return self.session
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:

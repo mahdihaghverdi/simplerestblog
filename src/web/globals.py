@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from starlette import status
 
-from src.core.database import get_db_session
+from src.core.database import get_db_sessionmaker
 from src.core.schemas import PostSchema
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
@@ -21,10 +21,10 @@ router = APIRouter()
 async def get_global(
     username: str,
     link: str,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
 ):
-    async with UnitOfWork(db):
-        repo = PostRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = PostRepo(session)
         service = PostService(repo)
         post = await service.get_global_post(username, link)
     return post

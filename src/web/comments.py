@@ -1,11 +1,11 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from starlette import status
 
 from src.core.acl import get_permission_setting, ACLSetting, check_permission
-from src.core.database import get_db_session
+from src.core.database import get_db_sessionmaker
 from src.core.depends import get_current_user_from_db
 from src.core.enums import RoutesEnum, APIPrefixesEnum
 from src.core.schemas import (
@@ -27,11 +27,11 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.COMMENTS.value}")
 async def add_comment(
     post_id: int,
     comment: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         comment = await service.create_comment(post_id, comment, user.username)
     return comment
@@ -46,11 +46,11 @@ async def add_reply(
     post_id: int,
     comment_id: int,
     reply: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         reply = await service.create_reply(post_id, comment_id, reply, user.username)
     return reply
@@ -59,13 +59,13 @@ async def add_reply(
 @router.get("/{post_id}", response_model=list[CommentReplySchema])
 async def get_comments(
     post_id: int,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     page: Annotated[int, Query(ge=1)] = 1,
     how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
     order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
 ):
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         comments = await service.get_comments(post_id, page, how_many, order)
     return comments
@@ -75,13 +75,13 @@ async def get_comments(
 async def get_replies(
     post_id: int,
     comment_id: int,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     page: Annotated[int, Query(ge=1)] = 1,
     how_many: Annotated[int, Query(ge=5, title="how-many")] = 5,
     order: Annotated[Literal["first", "last", "most_replied"], Query()] = "last",
 ):
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         comments = await service.get_replies(post_id, comment_id, page, how_many, order)
     return comments
@@ -92,11 +92,11 @@ async def update_comment(
     post_id: int,
     comment_id: int,
     comment: CreateCommentReplySchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     user: Annotated[UserSchema, Depends(get_current_user_from_db)],
 ):
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         comment = await service.update_comment(
             post_id, comment_id, comment, user.username
@@ -108,19 +108,19 @@ async def update_comment(
 async def delete_comment(
     post_id: int,
     comment_id: int,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     await check_permission(
-        db=db,
+        session_maker=session_maker,
         user_role=token.role,
         username=token.username,
         resource_identifier=comment_id,
         route=RoutesEnum.DELETE_COMMENT,
         permission_setting=permission_setting,
     )
-    async with UnitOfWork(db):
-        repo = CommentReplyRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         await service.delete_comment(post_id, comment_id)

@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from starlette.requests import Request
 
-from src.core.database import get_db_session
+from src.core.database import get_db_sessionmaker
 from src.core.exceptions import ForbiddenError, CredentialsError
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.repository.unitofwork import UnitOfWork
@@ -54,11 +54,11 @@ async def get_current_username_with_access(
 
 
 async def get_current_user_from_db(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     username: Annotated[str, Depends(get_current_username_with_access)],
 ):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo)
         user = await service.get_user(username)
     return user

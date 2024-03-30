@@ -1,12 +1,12 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.core.database import get_db_session
+from src.core.database import get_db_sessionmaker
 from src.core.depends import (
     get_current_username_with_refresh,
     get_current_username_with_access,
@@ -24,10 +24,10 @@ router = APIRouter(prefix=f"/{APIPrefixesEnum.AUTH.value}")
 @router.post("/signup", response_model=UserOutSchema, status_code=status.HTTP_201_CREATED)
 async def signup(
     user_data: UserSignupSchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
 ):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo)
         user = await service.signup_user(user_data)
     return user
@@ -37,11 +37,11 @@ async def signup(
 async def login(
     response: Response,
     user_login: UserLoginSchema,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
 ):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo, redis_client)
         tokens = await service.login_user(user_login)
 
@@ -58,12 +58,12 @@ async def login(
 @router.post("/2fa-img")
 async def get_2fa_image(
     request: Request,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ) -> str:
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo, redis_client)
         qr_img = await service.get_user_qr_img(
             request.cookies.get("Refresh-Token"), username
@@ -75,12 +75,12 @@ async def get_2fa_image(
 async def verify(
     request: Request,
     code: str,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo, redis_client)
         await service.verify(
             refresh_token=request.cookies.get("Refresh-Token"),
@@ -93,12 +93,12 @@ async def verify(
 async def refresh(
     request: Request,
     response: Response,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+    session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
     redis_client: Annotated[RedisClient, Depends(get_redis_client)],
     username: Annotated[str, Depends(get_current_username_with_refresh)],
 ):
-    async with UnitOfWork(db):
-        repo = UserRepo(db)
+    async with UnitOfWork(session_maker) as session:
+        repo = UserRepo(session)
         service = UserService(repo, redis_client)
         tokens = await service.refresh_token(
             request.cookies.get("Refresh-Token"), username

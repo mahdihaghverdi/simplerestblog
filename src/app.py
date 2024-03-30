@@ -44,3 +44,6 @@ openapi_schema["components"]["securitySchemes"] = {
 }
 
 app.openapi_schema = openapi_schema
+
+
+# TODO: add a lifespan for database connections

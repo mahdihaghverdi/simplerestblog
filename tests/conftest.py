@@ -6,15 +6,15 @@ from starlette.testclient import TestClient
 
 from src.app import app
 from src.core.config import settings
-from src.core.database import get_db_session
+from src.core.database import get_db_sessionmaker
 from src.core.enums import APIPrefixesEnum
 from src.core.redis_db import get_redis_client
 from src.core.security import hash_password
 from src.repository.models import UserModel, Base
-from tests.database import get_db_mock, ASessionMock, AEngineMock
+from tests.database import get_session_maker_mock, ASessionMock, AEngineMock
 from tests.redis_db import get_redis_client_mock, clear_database
 
-app.dependency_overrides[get_db_session] = get_db_mock
+app.dependency_overrides[get_db_sessionmaker] = get_session_maker_mock
 app.dependency_overrides[get_redis_client] = get_redis_client_mock
 
 base_url = f"{settings.PREFIX}/"
