@@ -1,6 +1,9 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
 class UnitOfWork:
     def __init__(self, session):
-        self.session = session
+        self.session: AsyncSession = session
 
     async def __aenter__(self):
         return self
@@ -9,3 +12,4 @@ class UnitOfWork:
         if exc_type is not None:
             await self.session.rollback()
         await self.session.commit()
+        await self.session.close()
