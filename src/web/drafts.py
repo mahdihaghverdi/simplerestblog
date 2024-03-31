@@ -70,15 +70,15 @@ async def get_all_drafts_by_username(
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
-    await check_permission(
-        session_maker,
-        token.role,
-        token.username,
-        username,
-        RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
-        permission_setting,
-    )
     async with UnitOfWork(session_maker) as session:
+        await check_permission(
+            session,
+            token.role,
+            token.username,
+            username,
+            RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
+            permission_setting,
+        )
         repo = DraftRepo(session)
         service = DraftService(repo)
         drafts = await service.get_all(username, desc_order)
@@ -110,15 +110,15 @@ async def get_one_draft_by_username(
     token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
-    await check_permission(
-        session_maker,
-        token.role,
-        token.username,
-        draft_id,
-        RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
-        permission_setting,
-    )
     async with UnitOfWork(session_maker) as session:
+        await check_permission(
+            session,
+            token.role,
+            token.username,
+            draft_id,
+            RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
+            permission_setting,
+        )
         repo = DraftRepo(session)
         service = DraftService(repo)
         draft = await service.get_one(draft_id, username)

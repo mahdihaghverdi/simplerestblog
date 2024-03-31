@@ -112,15 +112,15 @@ async def delete_comment(
     token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
-    await check_permission(
-        session_maker=session_maker,
-        user_role=token.role,
-        username=token.username,
-        resource_identifier=comment_id,
-        route=RoutesEnum.DELETE_COMMENT,
-        permission_setting=permission_setting,
-    )
     async with UnitOfWork(session_maker) as session:
+        await check_permission(
+            session=session,
+            user_role=token.role,
+            username=token.username,
+            resource_identifier=comment_id,
+            route=RoutesEnum.DELETE_COMMENT,
+            permission_setting=permission_setting,
+        )
         repo = CommentReplyRepo(session)
         service = CommentReplyService(repo)
         await service.delete_comment(post_id, comment_id)

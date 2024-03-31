@@ -32,15 +32,15 @@ async def get_by_username(
     token: Annotated[AccessToken, Depends(get_access_token)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
-    await check_permission(
-        session_maker=session_maker,
-        user_role=token.role,
-        username=token.username,
-        resource_identifier=username,
-        route=RoutesEnum.GET_USER_BY_USERNAME,
-        permission_setting=permission_setting,
-    )
     async with UnitOfWork(session_maker) as session:
+        await check_permission(
+            session=session,
+            user_role=token.role,
+            username=token.username,
+            resource_identifier=username,
+            route=RoutesEnum.GET_USER_BY_USERNAME,
+            permission_setting=permission_setting,
+        )
         repo = UserRepo(session)
         service = UserService(repo)
         return await service.get_user(username)

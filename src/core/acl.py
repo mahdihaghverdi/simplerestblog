@@ -1,12 +1,11 @@
 from typing import TypeAlias
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import PermissionGrantsEnum, RoutesEnum, UserRolesEnum
 from src.core.exceptions import UnAuthorisedAccessError
 from src.repository.models import DraftModel, CommentModel
-from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
 
@@ -31,30 +30,28 @@ async def _user_not_self_not_allowed(
 
 
 async def _draft_not_self_not_allowed(
-    username: str, draft_id: int | str, db: async_sessionmaker
+    username: str, draft_id: int | str, session: AsyncSession
 ) -> bool:
     stmt = (
         select(DraftModel.id)
         .where(DraftModel.username == username)
         .where(DraftModel.id == draft_id)
     )
-    async with db() as session:
-        draft = (await session.execute(stmt)).first()
+    draft = (await session.execute(stmt)).first()
     if draft is not None:
         return True
     raise UnAuthorisedAccessError()
 
 
 async def _comment_not_self_not_allowed(
-    username: str, comment_id: int | str, db: async_sessionmaker
+    username: str, comment_id: int | str, session: AsyncSession
 ) -> bool:
     stmt = (
         select(CommentModel.id)
         .where(CommentModel.username == username)
         .where(CommentModel.id == comment_id)
     )
-    async with db() as session:
-        comment = (await session.execute(stmt)).first()
+    comment = (await session.execute(stmt)).first()
     if comment is not None:
         return True
     raise UnAuthorisedAccessError()
@@ -94,17 +91,16 @@ def get_permission_setting():
 
 
 async def check_permission(
-    session_maker: async_sessionmaker,
+    session: AsyncSession,
     user_role: UserRolesEnum,
     username: str,
     resource_identifier: str | int,
     route: RoutesEnum,
     permission_setting: ACLSetting,
 ):
-    async with UnitOfWork(session_maker) as session:
-        repo = UserRepo(session)
-        service = UserService(repo)
-        await service.get_user(username)
+    repo = UserRepo(session)
+    service = UserService(repo)
+    await service.get_user(username)
 
     not_allowed = _GRANT_MAPPER[PermissionGrantsEnum.NOT_ALLOWED]
     try:
@@ -114,4 +110,4 @@ async def check_permission(
         await not_allowed()
     else:
         func = _GRANT_MAPPER[grant]
-        await func(username, resource_identifier, session_maker)
+        await func(username, resource_identifier, session)
