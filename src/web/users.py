@@ -12,7 +12,6 @@ from src.core.schemas import (
     UserOutSchema,
     UserSchema,
 )
-from src.core.security import get_access_token, AccessToken
 from src.repository.unitofwork import UnitOfWork
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
@@ -29,14 +28,13 @@ async def me(user: Annotated[UserSchema, Depends(get_current_user_from_db)]):
 async def get_by_username(
     username: str,
     session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
-    token: Annotated[AccessToken, Depends(get_access_token)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     async with UnitOfWork(session_maker) as session:
         await check_permission(
             session=session,
-            user_role=token.role,
-            username=token.username,
+            user=user,
             resource_identifier=username,
             route=RoutesEnum.GET_USER_BY_USERNAME,
             permission_setting=permission_setting,

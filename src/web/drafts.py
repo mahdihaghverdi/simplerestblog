@@ -18,7 +18,6 @@ from src.core.schemas import (
     UpdateDraftSchema,
     PublishDraftSchema,
 )
-from src.core.security import get_access_token, AccessToken
 from src.repository.draft_repo import DraftRepo
 from src.repository.post_repo import PostRepo
 from src.repository.unitofwork import UnitOfWork
@@ -66,15 +65,14 @@ async def get_all_drafts(
 async def get_all_drafts_by_username(
     username: str,
     session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
-    token: Annotated[AccessToken, Depends(get_access_token)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
     desc_order: Annotated[bool, Query(description="DESC if True ASC otherwise.")] = True,
 ):
     async with UnitOfWork(session_maker) as session:
         await check_permission(
             session,
-            token.role,
-            token.username,
+            user,
             username,
             RoutesEnum.GET_ALL_DRAFTS_BY_USERNAME,
             permission_setting,
@@ -107,14 +105,13 @@ async def get_one_draft_by_username(
     username: str,
     draft_id: int,
     session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
-    token: Annotated[AccessToken, Depends(get_access_token)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     async with UnitOfWork(session_maker) as session:
         await check_permission(
             session,
-            token.role,
-            token.username,
+            user,
             draft_id,
             RoutesEnum.GET_ONE_DRAFT_BY_USERNAME,
             permission_setting,

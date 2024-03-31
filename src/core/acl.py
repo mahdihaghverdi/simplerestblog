@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import PermissionGrantsEnum, RoutesEnum, UserRolesEnum
 from src.core.exceptions import UnAuthorisedAccessError
+from src.core.schemas import UserSchema
 from src.repository.models import DraftModel, CommentModel
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
@@ -92,22 +93,21 @@ def get_permission_setting():
 
 async def check_permission(
     session: AsyncSession,
-    user_role: UserRolesEnum,
-    username: str,
+    user: UserSchema,
     resource_identifier: str | int,
     route: RoutesEnum,
     permission_setting: ACLSetting,
 ):
     repo = UserRepo(session)
     service = UserService(repo)
-    await service.get_user(username)
+    await service.get_user(user.username)
 
     not_allowed = _GRANT_MAPPER[PermissionGrantsEnum.NOT_ALLOWED]
     try:
         permission_for_endpoint = permission_setting[route]
-        grant = permission_for_endpoint[user_role]
+        grant = permission_for_endpoint[user.role]
     except KeyError:
         await not_allowed()
     else:
         func = _GRANT_MAPPER[grant]
-        await func(username, resource_identifier, session)
+        await func(user.username, resource_identifier, session)
