@@ -10,28 +10,9 @@ from src.core.exceptions import CredentialsError
 from src.core.schemas import UserOutSchema
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.core.utils import sha256_username
-from .conftest import base_url, simple_signup_data, username, signup_data, login_data
 from tests.shared.redis_db import get_redis_client_mock
-
-
-class BaseTest:
-    url: str
-
-    @staticmethod
-    def extract_error_message(data):
-        return data["error"], data.get("details")
-
-    @staticmethod
-    def make_auth_headers(csrf_token):
-        return {"Authorization": f"Bearer {csrf_token}"}
-
-    @staticmethod
-    def make_auth_cookies(refresh_token, access_token=None):
-        base = {"Refresh-Token": refresh_token}
-        if access_token:
-            base.update([("Access-Token", access_token)])
-            return base
-        return base
+from .conftest import base_url, simple_signup_data, username, signup_data, login_data
+from .. import BaseTest
 
 
 class RefreshTokenMixin:

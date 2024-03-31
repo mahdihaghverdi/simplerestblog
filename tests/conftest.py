@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-from sqlalchemy import insert
 from starlette.testclient import TestClient
 
 from src.app import app
@@ -9,15 +8,12 @@ from src.core.config import settings
 from src.core.database import get_db_sessionmaker
 from src.core.enums import APIPrefixesEnum
 from src.core.redis_db import get_redis_client
-from src.core.security import hash_password
-from src.repository.models import UserModel, Base
-from tests.shared.database import get_session_maker_mock, ASessionMock, AEngineMock
+from src.repository.models import Base
+from tests.shared.database import get_session_maker_mock, AEngineMock
 from tests.shared.redis_db import get_redis_client_mock, clear_database
 
 app.dependency_overrides[get_db_sessionmaker] = get_session_maker_mock
 app.dependency_overrides[get_redis_client] = get_redis_client_mock
-
-base_url = f"{settings.PREFIX}/"
 
 
 async def create_all():
@@ -37,62 +33,6 @@ def client():
     yield TestClient(app=app)
     clear_database()
     asyncio.run(drop_all())
-
-
-@pytest.fixture
-def create_admin():
-    async def setup():
-        async with ASessionMock() as session:
-            async with session.begin():
-                stmt = insert(UserModel).values(
-                    username="admin",
-                    password=hash_password("1"),
-                    role="ADMIN",
-                )
-                await session.execute(stmt)
-
-    asyncio.run(setup())
-
-
-@pytest.fixture
-def admin_access_token(create_admin):
-    # return encode_access_token(
-    #     AccessTokenData(username="admin", role=UserRolesEnum.ADMIN),
-    # )
-    pass
-
-
-@pytest.fixture
-def admin_auth_headers(admin_access_token):
-    return {"Authorization": f"Bearer {admin_access_token}"}
-
-
-@pytest.fixture
-def create_mahdi():
-    async def setup():
-        async with ASessionMock() as session:
-            async with session.begin():
-                stmt = insert(UserModel).values(
-                    username="mahdi",
-                    password=hash_password("12345678"),
-                    role="USER",
-                )
-                await session.execute(stmt)
-
-    asyncio.run(setup())
-
-
-@pytest.fixture
-def mahdi_access_token(create_mahdi):
-    # return encode_access_token(
-    #     AccessTokenData(username="mahdi", role=UserRolesEnum.USER),
-    # )
-    pass
-
-
-@pytest.fixture
-def mahdi_auth_headers(mahdi_access_token):
-    return {"Authorization": f"Bearer {mahdi_access_token}"}
 
 
 @pytest.fixture

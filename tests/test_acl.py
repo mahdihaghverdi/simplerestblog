@@ -2,12 +2,14 @@ from abc import ABC, abstractmethod
 
 from src.core.config import settings
 from src.core.enums import APIPrefixesEnum
+from tests import BaseTest
+from tests import base_url
 
 draft_data = {"title": "title", "body": "body"}
 
-users_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.USERS.value}"
-drafts_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}"
-comments_basic_url = f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}"
+users_basic_url = base_url + f"{APIPrefixesEnum.USERS.value}"
+drafts_basic_url = base_url + f"{APIPrefixesEnum.DRAFTS.value}"
+comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
 
 
 class PermissionABC(ABC):
@@ -28,59 +30,43 @@ class PermissionABC(ABC):
         pass
 
 
-class TestGetByUsername(PermissionABC):
-    def test_not_found(self, client, admin_auth_headers):
+class TestGetByUsername(PermissionABC, BaseTest):
+    def test_not_found(self, client, refreshed_admin):
         response = client.get(
-            f"{users_basic_url}/mahdi",
-            headers=admin_auth_headers,
+            f"{users_basic_url}/mahdi", **self.headers_cookies(refreshed_admin)
         )
         assert response.status_code == 404, response.text
 
-    def test_admin_request_itself(self, client, admin_auth_headers):
+    def test_admin_request_itself(self, client, refreshed_admin):
         response = client.get(
-            f"{users_basic_url}/admin",
-            headers=admin_auth_headers,
+            f"{users_basic_url}/admin", **self.headers_cookies(refreshed_admin)
         )
         assert response.status_code == 200, response.text
 
         data = response.json()
         assert data["username"] == "admin"
 
-    def test_admin_request_another(
-        self,
-        client,
-        admin_auth_headers,
-        create_mahdi,
-    ):
+    def test_admin_request_another(self, client, refreshed_admin, signup_mahdi):
         response = client.get(
-            f"{users_basic_url}/mahdi",
-            headers=admin_auth_headers,
+            f"{users_basic_url}/mahdi", **self.headers_cookies(refreshed_admin)
         )
         assert response.status_code == 200, response.text
 
         data = response.json()
         assert data["username"] == "mahdi"
 
-    def test_user_requests_itself(self, client, mahdi_auth_headers):
+    def test_user_requests_itself(self, client, refreshed_mahdi):
         response = client.get(
-            f"{users_basic_url}/mahdi",
-            headers=mahdi_auth_headers,
+            f"{users_basic_url}/mahdi", **self.headers_cookies(refreshed_mahdi)
         )
         assert response.status_code == 200, response.text
 
         data = response.json()
         assert data["username"] == "mahdi"
 
-    def test_user_requests_another(
-        self,
-        client,
-        create_admin,
-        create_mahdi,
-        mahdi_auth_headers,
-    ):
+    def test_user_requests_another(self, client, signup_admin, refreshed_mahdi):
         response = client.get(
-            f"{users_basic_url}/admin",
-            headers=mahdi_auth_headers,
+            f"{users_basic_url}/admin", **self.headers_cookies(refreshed_mahdi)
         )
         assert response.status_code == 401, response.text
 
