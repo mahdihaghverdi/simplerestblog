@@ -49,6 +49,9 @@ class RedisClient:
     async def ttl(self, name) -> int:
         return await self.redis.ttl(name)
 
+    async def close(self):
+        await self.redis.aclose()
+
 
 @asingleton
 async def get_redis_client() -> RedisClient:

@@ -1,9 +1,13 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from starlette.responses import JSONResponse
 
 from src.core.config import settings
-from src.core.exceptions import Error
+from src.core.database import AEngine
+from src.core.exceptions import Error, DatabaseConnectionError
+from src.core.redis_db import get_redis_client
 from src.core.utils import HTTP, APIKey
 from src.web.auth import router as auth_router
 from src.web.comments import router as comment_router
@@ -12,7 +16,21 @@ from src.web.globals import router as global_router
 from src.web.posts import router as post_router
 from src.web.users import router as user_router
 
-app = FastAPI(debug=True)
+
+@asynccontextmanager
+async def check_databases(app_: FastAPI):
+    try:
+        async with AEngine.connect():
+            pass
+    except ConnectionRefusedError:
+        raise DatabaseConnectionError("PostgreSQL is not available")
+    rd = await get_redis_client()
+    yield
+    await AEngine.dispose()
+    await rd.close()
+
+
+app = FastAPI(debug=True, lifespan=check_databases)
 
 app.include_router(auth_router, tags=["auth"], prefix=settings.PREFIX)
 app.include_router(user_router, tags=["users"], prefix=settings.PREFIX)
@@ -44,6 +62,3 @@ openapi_schema["components"]["securitySchemes"] = {
 }
 
 app.openapi_schema = openapi_schema
-
-
-# TODO: add a lifespan for database connections
