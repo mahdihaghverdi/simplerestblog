@@ -8,7 +8,7 @@ from sqlalchemy import select
 from src.core.enums import APIPrefixesEnum
 from src.repository.models import UserModel
 from tests.conftest import base_url
-from tests.database import ASessionMock
+from tests.shared.database import ASessionMock
 
 base_url = base_url + f"{APIPrefixesEnum.AUTH.value}"
 

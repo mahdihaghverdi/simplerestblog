@@ -11,8 +11,8 @@ from src.core.enums import APIPrefixesEnum
 from src.core.redis_db import get_redis_client
 from src.core.security import hash_password
 from src.repository.models import UserModel, Base
-from tests.database import get_session_maker_mock, ASessionMock, AEngineMock
-from tests.redis_db import get_redis_client_mock, clear_database
+from tests.shared.database import get_session_maker_mock, ASessionMock, AEngineMock
+from tests.shared.redis_db import get_redis_client_mock, clear_database
 
 app.dependency_overrides[get_db_sessionmaker] = get_session_maker_mock
 app.dependency_overrides[get_redis_client] = get_redis_client_mock

@@ -11,7 +11,7 @@ from src.core.schemas import UserOutSchema
 from src.core.security import decode_refresh_token, decode_csrf_token, decode_access_token
 from src.core.utils import sha256_username
 from .conftest import base_url, simple_signup_data, username, signup_data, login_data
-from ..redis_db import get_redis_client_mock
+from tests.shared.redis_db import get_redis_client_mock
 
 
 class BaseTest:
