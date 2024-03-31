@@ -28,3 +28,7 @@ class BaseTest:
             refreshed_namedtuple.refresh_token, refreshed_namedtuple.access_token
         )
         return {"headers": headers, "cookies": cookies}
+
+    def headers_cookies_tuple(self, refreshed_namedtuple):
+        _ = self.headers_cookies(refreshed_namedtuple)
+        return _["headers"], _["cookies"]

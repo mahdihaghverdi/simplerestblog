@@ -71,32 +71,28 @@ class TestGetByUsername(PermissionABC, BaseTest):
         assert response.status_code == 401, response.text
 
 
-def create_draft(client, headers):
+def create_draft(client, headers, cookies):
     draft_id = client.post(
-        f"{drafts_basic_url}",
-        json=draft_data,
-        headers=headers,
+        f"{drafts_basic_url}/", headers=headers, cookies=cookies, json=draft_data
     ).json()["id"]
     return draft_id
 
 
-class TestGetOneDraft(PermissionABC):
+class TestGetOneDraft(PermissionABC, BaseTest):
     username_path: str = f"{drafts_basic_url}/" + "{username}/{draft_id}"
 
-    def test_not_found(self, client, admin_auth_headers):
+    def test_not_found(self, client, refreshed_admin):
         response = client.get(
-            f"{drafts_basic_url}/1",
-            headers=admin_auth_headers,
+            f"{drafts_basic_url}/1", **self.headers_cookies(refreshed_admin)
         )
         assert response.status_code == 404, response.text
 
-    def test_admin_request_itself(self, client, admin_auth_headers):
-        draft_id = create_draft(client, admin_auth_headers)
+    def test_admin_request_itself(self, client, refreshed_admin):
+        headers, cookies = self.headers_cookies_tuple(refreshed_admin)
+        draft_id = create_draft(client, headers=headers, cookies=cookies)
+        url = self.username_path.format(draft_id=draft_id, username="admin")
 
-        response = client.get(
-            self.username_path.format(draft_id=draft_id, username="admin"),
-            headers=admin_auth_headers,
-        )
+        response = client.get(url, headers=headers, cookies=cookies)
         assert response.status_code == 200, response.text
 
         data = response.json()
@@ -104,17 +100,13 @@ class TestGetOneDraft(PermissionABC):
         assert data["body"] == draft_data["body"]
         assert data["username"] == "admin"
 
-    def test_admin_request_another(
-        self,
-        client,
-        admin_auth_headers,
-        mahdi_auth_headers,
-    ):
-        draft_id = create_draft(client, mahdi_auth_headers)
-        response = client.get(
-            self.username_path.format(draft_id=draft_id, username="mahdi"),
-            headers=admin_auth_headers,
-        )
+    def test_admin_request_another(self, client, refreshed_admin, refreshed_mahdi):
+        admin_headers, admin_cookies = self.headers_cookies_tuple(refreshed_admin)
+        mahdi_headers, mahdi_cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        draft_id = create_draft(client, headers=mahdi_headers, cookies=mahdi_cookies)
+        url = self.username_path.format(draft_id=draft_id, username="mahdi")
+
+        response = client.get(url, headers=admin_headers, cookies=admin_cookies)
         assert response.status_code == 200, response.text
 
         data = response.json()
@@ -122,12 +114,12 @@ class TestGetOneDraft(PermissionABC):
         assert data["body"] == draft_data["body"]
         assert data["username"] == "mahdi"
 
-    def test_user_requests_itself(self, client, mahdi_auth_headers):
-        draft_id = create_draft(client, mahdi_auth_headers)
-        response = client.get(
-            self.username_path.format(draft_id=draft_id, username="mahdi"),
-            headers=mahdi_auth_headers,
-        )
+    def test_user_requests_itself(self, client, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        draft_id = create_draft(client, headers=headers, cookies=cookies)
+        url = self.username_path.format(draft_id=draft_id, username="mahdi")
+
+        response = client.get(url, headers=headers, cookies=cookies)
         assert response.status_code == 200, response.text
 
         data = response.json()
@@ -135,16 +127,11 @@ class TestGetOneDraft(PermissionABC):
         assert data["body"] == draft_data["body"]
         assert data["username"] == "mahdi"
 
-    def test_user_requests_another(
-        self,
-        client,
-        create_admin,
-        mahdi_auth_headers,
-    ):
-        response = client.get(
-            self.username_path.format(username="admin", draft_id=1),
-            headers=mahdi_auth_headers,
-        )
+    def test_user_requests_another(self, client, signup_admin, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        url = self.username_path.format(draft_id=1, username="admin")
+
+        response = client.get(url, headers=headers, cookies=cookies)
         assert response.status_code == 401, response.text
 
 

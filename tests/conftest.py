@@ -9,6 +9,18 @@ from src.core.database import get_db_sessionmaker
 from src.core.enums import APIPrefixesEnum
 from src.core.redis_db import get_redis_client
 from src.repository.models import Base
+from tests.auth.conftest import (  # noqa
+    signup_mahdi,
+    signup_admin,
+    login_mahdi,
+    login_admin,
+    verified_mahdi,
+    verified_admin,
+    refreshed_mahdi,
+    refreshed_admin,
+    get_mahdi_totp_hash,
+    get_admin_totp_hash,
+)
 from tests.shared.database import get_session_maker_mock, AEngineMock
 from tests.shared.redis_db import get_redis_client_mock, clear_database
 
