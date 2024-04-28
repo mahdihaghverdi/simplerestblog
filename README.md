@@ -47,3 +47,16 @@ It uses the open source [PostgreSQL] database for storage.
 - Automated code formatting and linting with [pre-commit] and [ruff].
 - Pagination support for listing comments.
 - Fully type annotated code for better IDE support and code quality.
+
+## Requirements
+
+Manual installation:
+
+- Python 3.10 or higher.
+- [Poetry] for dependency management.
+- Up and running [PostgreSQL] instance (locally or remotely).
+
+Using Docker:
+
+- [Docker]
+- [Docker-Compose]
