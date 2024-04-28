@@ -8,6 +8,7 @@ on:
       - main
 
 env:
+  SRB_TEST_DATABASE_URL: 'postgresql+asyncpg://postgres:postgres@0.0.0.0:5432'
   SRB_SECRET_KEY: 'd76db401004b334d0d79bc041f6c6f54c5f495ef4dc228f500eab4df532248ac'
 
 jobs:
