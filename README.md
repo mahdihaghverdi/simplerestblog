@@ -133,6 +133,12 @@ comments                                                     |                  
   ^                                                                         |
   |-------------------------------------------------------------------------+
 ```
+
+As you can see, data is normalized.
+Some design considerations of the database design:
+1. Each post's details are stored in the `drafts` table. This is good because if someone wants to _unpublish_ and edit
+ the post, the `is_published` columns of the `drafts` table will be `false` and there is no need to delete post details and reinsert them into database (if they were stored in `posts` table _separately_)
+2. Retrieving the comments is done by using the [PostgreSQL] feature [LTree] (which is a very fast, builtin type for hierarchical tree-like data)
 ## Requirements
 
 Manual installation:
@@ -276,3 +282,4 @@ This project is licensed under the terms of the [GPL-3.0] license.
 [ruff]: https://github.com/charliermarsh/ruff "An extremely fast Python linter, written in Rust."
 [Docker]: https://github.com/docker/
 [Docker-Compose]: https://github.com/docker/compose "Define and run multi-container applications with Docker."
+[LTree]: https://www.postgresql.org/docs/current/ltree.html ""
