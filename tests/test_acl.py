@@ -135,36 +135,57 @@ class TestGetOneDraft(PermissionABC, BaseTest):
         assert response.status_code == 401, response.text
 
 
-class TestGetAllDrafts(PermissionABC):
-    def test_admin_request_itself(self, client, admin_auth_headers):
-        response = client.get(
-            f"{drafts_basic_url}/all/admin",
-            headers=admin_auth_headers,
-        )
-        assert response.status_code == 200, response.text
-        assert not response.json()
+class TestGetAllDrafts(PermissionABC, BaseTest):
+    username_path = f"{drafts_basic_url}/" + "all/{username}"
 
-    def test_admin_request_another(self, client, admin_auth_headers, create_mahdi):
-        response = client.get(
-            f"{drafts_basic_url}/all/mahdi",
-            headers=admin_auth_headers,
-        )
-        assert response.status_code == 200, response.text
-        assert not response.json()
+    def test_admin_request_itself(self, client, refreshed_admin):
+        headers, cookies = self.headers_cookies_tuple(refreshed_admin)
+        create_draft(client, headers, cookies)
+        create_draft(client, headers, cookies)
 
-    def test_user_requests_itself(self, client, mahdi_auth_headers):
-        response = client.get(
-            f"{drafts_basic_url}/all/mahdi",
-            headers=mahdi_auth_headers,
-        )
-        assert response.status_code == 200, response.text
-        assert not response.json()
+        url = self.username_path.format(username="admin")
 
-    def test_user_requests_another(self, client, create_admin, mahdi_auth_headers):
-        response = client.get(
-            f"{drafts_basic_url}/all/admin",
-            headers=mahdi_auth_headers,
-        )
+        response = client.get(url, headers=headers, cookies=cookies)
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert len(data) == 2
+        for d in data:
+            assert d["title"] == draft_data["title"]
+
+    def test_admin_request_another(self, client, refreshed_admin, refreshed_mahdi):
+        admin_headers, admin_cookies = self.headers_cookies_tuple(refreshed_admin)
+        mahdi_headers, mahdi_cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        create_draft(client, headers=mahdi_headers, cookies=mahdi_cookies)
+        url = self.username_path.format(username="mahdi")
+
+        response = client.get(url, headers=admin_headers, cookies=admin_cookies)
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert len(data) == 1
+        for d in data:
+            assert d["title"] == draft_data["title"]
+
+    def test_user_requests_itself(self, client, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        create_draft(client, headers=headers, cookies=cookies)
+        create_draft(client, headers=headers, cookies=cookies)
+        url = self.username_path.format(username="mahdi")
+
+        response = client.get(url, headers=headers, cookies=cookies)
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert len(data) == 2
+        for d in data:
+            assert d["title"] == draft_data["title"]
+
+    def test_user_requests_another(self, client, signup_admin, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_mahdi)
+        url = self.username_path.format(username="admin")
+
+        response = client.get(url, headers=headers, cookies=cookies)
         assert response.status_code == 401, response.text
 
 
