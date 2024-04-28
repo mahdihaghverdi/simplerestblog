@@ -69,7 +69,7 @@ class UserService(Service[UserRepo]):
         await self.redis_client.set(
             refresh_token,
             user.username,
-            timeout=settings.REFRESH_TOKEN_EXPIRE_MINUTES * 60,
+            timeout=settings.SRB_REFRESH_TOKEN_EXPIRE_MINUTES * 60,
         )
         return Token(
             access_token=None,
@@ -91,7 +91,7 @@ class UserService(Service[UserRepo]):
             raise CredentialsError("Invalid TOTP code")
 
         await self.redis_client.set(
-            sha256_username(username), True, timeout=settings.TFA_EXPIRE_MINUTES * 60
+            sha256_username(username), True, timeout=settings.SRB_TFA_EXPIRE_MINUTES * 60
         )
 
     async def refresh_token(self, old_refresh: str, username: str):

@@ -44,19 +44,21 @@ def hash_password(password: str) -> str:
 
 
 def encode_refresh_token(
-    username: str, expire=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+    username: str, expire=settings.SRB_REFRESH_TOKEN_EXPIRE_MINUTES
 ) -> str:
     to_encode = {"sub": "refresh_token", "username": username}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(minutes=expire)
     to_encode["exp"] = expire
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SRB_SECRET_KEY, algorithm=settings.SRB_ALGORITHM
+    )
     return encoded_jwt
 
 
 def decode_refresh_token(token) -> RefreshToken:
     try:
         token_payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.SRB_SECRET_KEY, algorithms=[settings.SRB_ALGORITHM]
         )
     except InvalidTokenError:
         raise CredentialsError("Invalid Refresh-Token") from None
@@ -70,18 +72,20 @@ def decode_refresh_token(token) -> RefreshToken:
 def encode_csrf_token(refresh_token, access_token=None) -> str:
     to_encode = {"sub": "csrf_token", "refresh_token": refresh_token}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
-        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
+        minutes=settings.SRB_REFRESH_TOKEN_EXPIRE_MINUTES,
     )
     to_encode["exp"] = expire
     to_encode["access_token"] = access_token
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SRB_SECRET_KEY, algorithm=settings.SRB_ALGORITHM
+    )
     return encoded_jwt
 
 
 def decode_csrf_token(token) -> CSRFToken:
     try:
         token_payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.SRB_SECRET_KEY, algorithms=[settings.SRB_ALGORITHM]
         )
     except InvalidTokenError:
         raise CredentialsError() from None
@@ -99,16 +103,20 @@ def decode_csrf_token(token) -> CSRFToken:
 def encode_access_token(username: str, role: UserRolesEnum, refresh_token: str) -> str:
     to_encode = {"username": username, "role": role, "refresh_token": refresh_token}
     expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
+        minutes=settings.SRB_ACCESS_TOKEN_EXPIRE_MINUTES,
     )
     to_encode["exp"] = expire
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SRB_SECRET_KEY, algorithm=settings.SRB_ALGORITHM
+    )
     return encoded_jwt
 
 
 def decode_access_token(token) -> AccessToken:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SRB_SECRET_KEY, algorithms=[settings.SRB_ALGORITHM]
+        )
     except InvalidTokenError:
         raise CredentialsError()
     else:

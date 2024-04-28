@@ -26,7 +26,7 @@ class _RedisSerializer:
 
 class RedisClient:
     def __init__(self):
-        self.redis = Redis.from_url(settings.REDIS_CACHE_URL, max_connections=100)
+        self.redis = Redis.from_url(settings.SRB_REDIS_CACHE_URL, max_connections=100)
         self._serializer = _RedisSerializer()
 
     async def ping(self):
