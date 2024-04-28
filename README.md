@@ -315,6 +315,6 @@ This project is licensed under the terms of the [GPL-3.0] license.
 [ruff]: https://github.com/charliermarsh/ruff "An extremely fast Python linter, written in Rust."
 [Docker]: https://github.com/docker/
 [Docker-Compose]: https://github.com/docker/compose "Define and run multi-container applications with Docker."
-[LTree]: https://www.postgresql.org/docs/current/ltree.html ""
+[LTree]: https://www.postgresql.org/docs/current/ltree.html "builtin type for hierarchical tree-like data"
 [SQLAlchemy]: https://www.sqlalchemy.org/ "he Python SQL Toolkit and Object Relational Mapper"
 [Google Authenticator]: https://support.google.com/accounts/answer/1066447?hl=en&co=GENIE.Platform%3DAndroid "Google authenticator"
