@@ -94,7 +94,7 @@ simplerestblog
 
 ### Implementation details
 #### Database Design
-At the core of many businesses, a good database design helps the reliability and data normalization
+At the core of almost any business, a good database design helps the reliability and data normalization
 and avoid wasting disk usage.
 
 The database design and considerations of _SRB_ is discussed below.
