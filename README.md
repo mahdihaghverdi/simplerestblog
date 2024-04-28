@@ -53,6 +53,7 @@ It uses the open source [PostgreSQL] database for storage.
 - Fully async and non-blocking.
 - Uses [FastAPI] framework for API development
 - Uses [PostgreSQL] as data store for users, drafts, posts and comments.
+- Fully layered and decoupled code.
 - Extensible architecture for adding new API endpoints and services.
 - Descriptive and well-documented code.
 - OAuth2 (with hashed passwords and JWT tokens) based user authentication.
@@ -64,7 +65,8 @@ It uses the open source [PostgreSQL] database for storage.
 
 ## Project Structure, Implementation details and Best Practices
 
-Structure of `shortify` folder containing main files and folders of the application is consistent and straightforward
+### Structure
+Structure of `simplerestblog` package containing main files and folders of the application is consistent and straightforward
 and just by looking at module names it gives you an idea of what's inside it!
 
 ```
@@ -83,6 +85,54 @@ simplerestblog
 └── pyproject.toml
 ```
 
+### Implementation details
+#### Database Design
+At the core of many businesses, a good database design helps the reliability and data normalization
+and avoid wasting disk usage.
+
+The database design and considerations of _SRB_ is discussed below.
+
+Tables:
+```
+users
++------------------+----------+------+---------+-----------+------+-----+----+
+| username: UNIQUE | password | role | created | totp_hash | name | ... | id | <------------+
++------------------+----------+------+---------+-----------+------+-----+----+              |
+                                                                          ^^                |
+                                                                          ||-----------+    |
+                                                                          |            |    |
+drafts                                                                    |            |    |
++----+-------+------+---------+------------+--------------+---------+--------------+   |    |
+| id | title | body | updated | draft_hash | is_published | created | username: FK |   |    |
++----+-------+------+---------+------------+--------------+---------+--------------+   |    |
+  ^                                                                                    |    |
+  |----------------------------+              +----------------------------------------+    |
+                               |              |                                             |
+posts                          |              |                                             |
++------+---------------+--------------+--------------+----+                                 |
+| slug | published: DT | draft_id: FK | username: FK | id |                                 |
++------+---------------+--------------+--------------+----+                                 |
+                                                       ^^                                   |
+                         +-----------------------------||                                   |
+                         |                              |----+                              |
+association_table        |                                   |                              |
++----+------------+-------------+                            |                              |
+| id | tag_id: FK | post_id: FK |                            |                              |
++----+------------+-------------+                            |                              |
+                |                                            |                              |
+                |                                            |                              |
+tags            |                                            |                              |
++----+-----+    |                                            |                              |
+| id | tag | <--+                                            |                              |
++----+-----+                                                 |                              |
+                                                             |                              |
+comments                                                     |                              |
++----+---------+-------------+---------------+---------+-------------+---------------+--------------+
+| id | comment | path: LTree | commented: DT | updated | post_id: FK | parent_id: FK | username: FK |
++----+---------+-------------+---------------+---------+-------------+---------------+--------------+
+  ^                                                                         |
+  |-------------------------------------------------------------------------+
+```
 ## Requirements
 
 Manual installation:
