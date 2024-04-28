@@ -221,17 +221,16 @@ Also note that **ALL** environment variables are **CASE SENSITIVE**.
 
 #### FastAPI Application
 
-| Name          | Description                       | Default |        Type        |
-|---------------|:----------------------------------|:-------:|:------------------:|
-| `API_VERSION` | API version 1 prefix              |  `v1`   |      `string`      |
-| `DEBUG`       | Debug mode for development        | `False` |     `boolean`      |
+| Name          | Description                | Default |        Type        |
+|---------------|:---------------------------|:-------:|:------------------:|
+| `API_VERSION` | API version prefix         |  `v1`   |      `string`      |
+| `DEBUG`       | Debug mode for development | `False` |     `boolean`      |
 
 
 #### PostgreSQL
 
 | Name     | Description             |                        Default                        |   Type   |
 |----------|:------------------------|:-----------------------------------------------------:|:--------:|
-| `PG_DB`  | Postgres database name  |                     `fastblog_db`                     | `string` |
 | `PG_URL` | Postgres connection URL | `postgresql+asyncpg://postgres:postgres@0.0.0.0:5432` | `string` |
 
 
@@ -254,20 +253,13 @@ Also note that **ALL** environment variables are **CASE SENSITIVE**.
 
 ### 4. Run the application
 
-After setting all the required and optional environment variables in `.env.example` file, copy it to `.env` file so that
-it's usable both by Docker and _Shortify_ app.
-
-Run the following commands to start up the services:
-
-#### Manually
-
 An up & running [PostgreSQL] and [Redis] instance are required.
 
 ```bash
 python -m src
 ```
 
-If the `SHORTIFY_DEBUG` environment variable is set to `True`, the application will be run in debug mode and will be
+If the `SRB_DEBUG` environment variable is set to `True`, the application will be run in debug mode and will be
 reloaded automatically on code changes.
 
 Now your application is available at `http://localhost:8000/`.
@@ -287,7 +279,7 @@ Frameworks and technologies used in _Shortify_
 - [poetry] (Dependency Management)
 - [pre-commit] (Git hook)
 - [ruff] (Linter & Formatter)
--
+
 ## License
 
 This project is licensed under the terms of the [GPL-3.0] license.

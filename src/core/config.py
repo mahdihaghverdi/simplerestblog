@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     SRB_API_VERSION: str = "v1"
     SRB_DEBUG: bool = False
-    SRB_PG_DB: str = "fastblog_db"
     SRB_PG_URL: str = "postgresql+asyncpg://postgres:postgres@0.0.0.0:5432"
     SRB_TEST_DATABASE_URL: str | None = None
     SRB_REDIS_CACHE_URL: str = "redis://@0.0.0.0:6379/0"
