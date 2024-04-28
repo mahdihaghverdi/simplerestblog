@@ -30,7 +30,7 @@ async def check_databases(app_: FastAPI):
     await rd.close()
 
 
-app = FastAPI(debug=True, lifespan=check_databases)
+app = FastAPI(debug=settings.SRB_DEBUG, lifespan=check_databases)
 
 app.include_router(auth_router, tags=["auth"], prefix=settings.PREFIX)
 app.include_router(user_router, tags=["users"], prefix=settings.PREFIX)
