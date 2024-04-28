@@ -13,7 +13,6 @@ from src.core.schemas import (
     CreateCommentReplySchema,
     CommentReplySchema,
 )
-from src.core.security import get_access_token, AccessToken
 from src.repository.comment_repo import CommentReplyRepo
 from src.repository.unitofwork import UnitOfWork
 from src.service.comment_service import CommentReplyService
@@ -109,14 +108,13 @@ async def delete_comment(
     post_id: int,
     comment_id: int,
     session_maker: Annotated[async_sessionmaker, Depends(get_db_sessionmaker)],
-    token: Annotated[AccessToken, Depends(get_access_token)],
+    user: Annotated[UserSchema, Depends(get_current_user_from_db)],
     permission_setting: Annotated[ACLSetting, Depends(get_permission_setting)],
 ):
     async with UnitOfWork(session_maker) as session:
         await check_permission(
             session=session,
-            user_role=token.role,
-            username=token.username,
+            user=user,
             resource_identifier=comment_id,
             route=RoutesEnum.DELETE_COMMENT,
             permission_setting=permission_setting,

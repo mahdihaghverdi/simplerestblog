@@ -9,6 +9,7 @@ draft_data = {"title": "title", "body": "body"}
 
 users_basic_url = base_url + f"{APIPrefixesEnum.USERS.value}"
 drafts_basic_url = base_url + f"{APIPrefixesEnum.DRAFTS.value}"
+posts_basic_url = base_url + f"{APIPrefixesEnum.POSTS.value}"
 comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
 
 
@@ -189,83 +190,89 @@ class TestGetAllDrafts(PermissionABC, BaseTest):
         assert response.status_code == 401, response.text
 
 
-class TestDeleteComment(PermissionABC):
-    def test_admin_request_itself(self, client, admin_auth_headers):
-        draft_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
-            json={"title": "title", "body": "body"},
-            headers=admin_auth_headers,
-        ).json()["id"]
+def create_post(client, headers, cookies, draft_id):
+    post_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
+        json={"tags": ["tag1", "tag2"], "slug": "slug"},
+        headers=headers,
+        cookies=cookies,
+    ).json()["id"]
+    return post_id
 
-        post_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
-            json={"tags": ["tag1", "tag2"], "slug": "slug"},
-            headers=admin_auth_headers,
-        ).json()["id"]
 
-        comment_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
-            json={"comment": "comment"},
-            headers=admin_auth_headers,
-        ).json()["id"]
+def create_comment(client, headers, cookies, post_id):
+    comment_id = client.post(
+        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
+        json={"comment": "comment"},
+        headers=headers,
+        cookies=cookies,
+    ).json()["id"]
+    return comment_id
+
+
+class TestDeleteComment(PermissionABC, BaseTest):
+    def test_admin_request_itself(self, client, refreshed_admin):
+        headers, cookies = self.headers_cookies_tuple(refreshed_admin)
+
+        draft_id = create_draft(client, headers, cookies)
+        post_id = create_post(client, headers, cookies, draft_id)
+        comment_id = create_comment(client, headers, cookies, post_id)
 
         response = client.delete(
-            f"{comments_basic_url}/{post_id}/{comment_id}", headers=admin_auth_headers
+            f"{comments_basic_url}/{post_id}/{comment_id}",
+            headers=headers,
+            cookies=cookies,
         )
         assert response.status_code == 204, response.text
 
         comments = client.get(f"{comments_basic_url}/{post_id}").json()
         assert len(comments) == 0
 
-    def test_admin_request_another(
-        self,
-        client,
-        admin_auth_headers,
-        mahdi_auth_headers,
-        post_id_fixture,
-        comment_id_fixture,
-    ):
+    def test_admin_request_another(self, client, refreshed_admin, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_admin)
+
+        draft_id = create_draft(client, headers, cookies)
+        post_id = create_post(client, headers, cookies, draft_id)
+        comment_id = create_comment(client, headers, cookies, post_id)
+
         response = client.delete(
-            f"{comments_basic_url}/{post_id_fixture}/{comment_id_fixture}",
-            headers=admin_auth_headers,
+            f"{comments_basic_url}/{post_id}/{comment_id}",
+            headers=headers,
+            cookies=cookies,
         )
         assert response.status_code == 204, response.text
 
-        comments = client.get(f"{comments_basic_url}/{post_id_fixture}").json()
+        comments = client.get(f"{comments_basic_url}/{post_id}").json()
         assert len(comments) == 0
 
-    def test_user_requests_itself(
-        self, client, mahdi_auth_headers, post_id_fixture, comment_id_fixture
-    ):
+    def test_user_requests_itself(self, client, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_mahdi)
+
+        draft_id = create_draft(client, headers, cookies)
+        post_id = create_post(client, headers, cookies, draft_id)
+        comment_id = create_comment(client, headers, cookies, post_id)
+
         response = client.delete(
-            f"{comments_basic_url}/{post_id_fixture}/{comment_id_fixture}",
-            headers=mahdi_auth_headers,
+            f"{comments_basic_url}/{post_id}/{comment_id}",
+            headers=headers,
+            cookies=cookies,
         )
         assert response.status_code == 204, response.text
 
-        comments = client.get(f"{comments_basic_url}/{post_id_fixture}").json()
+        comments = client.get(f"{comments_basic_url}/{post_id}").json()
         assert len(comments) == 0
 
-    def test_user_requests_another(self, client, admin_auth_headers, mahdi_auth_headers):
-        draft_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}",
-            json={"title": "title", "body": "body"},
-            headers=admin_auth_headers,
-        ).json()["id"]
+    def test_user_requests_another(self, client, refreshed_admin, refreshed_mahdi):
+        headers, cookies = self.headers_cookies_tuple(refreshed_admin)
+        mheaders, mcookies = self.headers_cookies_tuple(refreshed_mahdi)
 
-        post_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
-            json={"tags": ["tag1", "tag2"], "slug": "slug"},
-            headers=admin_auth_headers,
-        ).json()["id"]
-
-        comment_id = client.post(
-            f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
-            json={"comment": "comment"},
-            headers=admin_auth_headers,
-        ).json()["id"]
+        draft_id = create_draft(client, headers, cookies)
+        post_id = create_post(client, headers, cookies, draft_id)
+        comment_id = create_comment(client, headers, cookies, post_id)
 
         response = client.delete(
-            f"{comments_basic_url}/{post_id}/{comment_id}", headers=mahdi_auth_headers
+            f"{comments_basic_url}/{post_id}/{comment_id}",
+            headers=mheaders,
+            cookies=mcookies,
         )
         assert response.status_code == 401, response.text
