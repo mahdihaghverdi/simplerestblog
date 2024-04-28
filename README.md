@@ -28,6 +28,13 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Project Structure, Implementation details and Best Practices](#project-structure-implementation-details-and-best-practices)
+  - [Structure](#structure)
+  - [Implementation details](#implementation-details)
+    - [Database Design](#database-design)
+    - [Data Layer](#data-layer)
+    - [Authentication](#authentication)
+    - [Authorization](#authorization)
+    - [Architecture](#architecture)
 - [Requirements](#requirements)
 - [Setup](#setup)
     - [1. Clone the repository](#1-clone-the-repository)
@@ -36,7 +43,7 @@
         - [FastAPI Application](#fastapi-application)
         - [PostgreSQL](#postgresql)
         - [Redis](#redis)
-        - [Authentication](#authentication)
+        - [Authentication](#authentication-1)
     - [4. Run the application](#4-run-the-application)
         - [Manually](#manually)
 - [Documentation and Usage](#documentation-and-usage)
@@ -139,6 +146,32 @@ Some design considerations of the database design:
 1. Each post's details are stored in the `drafts` table. This is good because if someone wants to _unpublish_ and edit
  the post, the `is_published` columns of the `drafts` table will be `false` and there is no need to delete post details and reinsert them into database (if they were stored in `posts` table _separately_)
 2. Retrieving the comments is done by using the [PostgreSQL] feature [LTree] (which is a very fast, builtin type for hierarchical tree-like data)
+
+#### Data Layer
+The data layer of the application has repositories for different database tables.
+
+- In each method of the repositories queries are generated using [SQLAlchemy] query builder functions and methods,
+to have full control over the generated query and more important database hits.
+
+#### Authentication
+- _SRB_ uses _access_ and _refresh_ `JWT` tokens to implement authentication.
+
+  Signing up is a simple `username`, `password` flow.
+- 2FA:
+
+  _SRB_ has builtin support for _TOTP_ two-factor authentication using qr-code and authenticator apps like: [Google Authenticator]
+
+#### Authorization
+Most routes of _SRB_ are protected (i.e. you have to be logged in and provide your access token)
+However _SRB_ implements different layer of permissions for routes which in short is the _ACL_.
+_SRB_ handle the ACL and route access permission with JWT tokens.
+
+For example if I am the superuser or admin of _SRB_ I can delete any user comments with the route that user uses to remove his/her comment. Also, if a users attempts to delete some other user's comment, it is now allowed.
+
+#### Architecture
+_SRB_ is designed as a layered system. There are three layers: Data layer, Service layer and API layer which are fully decoupled.
+ and upper layers are not aware of the details in the lower layers which is achieved with dependency injection.
+
 ## Requirements
 
 Manual installation:
@@ -283,3 +316,5 @@ This project is licensed under the terms of the [GPL-3.0] license.
 [Docker]: https://github.com/docker/
 [Docker-Compose]: https://github.com/docker/compose "Define and run multi-container applications with Docker."
 [LTree]: https://www.postgresql.org/docs/current/ltree.html ""
+[SQLAlchemy]: https://www.sqlalchemy.org/ "he Python SQL Toolkit and Object Relational Mapper"
+[Google Authenticator]: https://support.google.com/accounts/answer/1066447?hl=en&co=GENIE.Platform%3DAndroid "Google authenticator"
