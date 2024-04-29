@@ -48,12 +48,15 @@
         - [Manually](#manually)
 - [Documentation and Usage](#documentation-and-usage)
 - [Stack](#stack)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ## Introduction
 
 _SimpleRESTBlog_ is a fast, fully async and reliable blog system RESTful API built with Python and [FastAPI] framework.
 It uses the open source [PostgreSQL] database for storage.
+
+**Note**: This project is under development and is not fully ready! see the [Roadmap](#roadmap) section.
 
 ## Features
 
@@ -279,6 +282,16 @@ Frameworks and technologies used in _Shortify_
 - [poetry] (Dependency Management)
 - [pre-commit] (Git hook)
 - [ruff] (Linter & Formatter)
+
+## Roadmap
+- [ ] Implement a route to `unpublish` a post
+- [ ] Use [Redis] for page caching
+- [ ] Introduce likes in _SRB_
+- [ ] Implement following and follower machnism
+- [ ] Introduce notifications in _SRB_
+    - [ ] notif for adding comments and replies
+    - [ ] notif for likes
+    - [ ] follow or unfollow
 
 ## License
 
