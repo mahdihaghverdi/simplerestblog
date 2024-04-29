@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.enums import PermissionGrantsEnum, RoutesEnum, UserRolesEnum
 from src.core.exceptions import UnAuthorisedAccessError
 from src.core.schemas import UserSchema
-from src.repository.models import DraftModel, CommentModel
+from src.repository.models import DraftModel, CommentModel, PostModel
 from src.repository.user_repo import UserRepo
 from src.service.user_service import UserService
 
@@ -23,39 +23,49 @@ async def _user_not_self_not_allowed(
     username: str,
     req_username: int | str,
     *args,
-) -> bool:
+):
     """Allow if the user is requested for him/herself resource"""
-    if username == req_username:
-        return True
-    raise UnAuthorisedAccessError()
+    if username != req_username:
+        raise UnAuthorisedAccessError()
 
 
 async def _draft_not_self_not_allowed(
     username: str, draft_id: int | str, session: AsyncSession
-) -> bool:
+):
     stmt = (
         select(DraftModel.id)
         .where(DraftModel.username == username)
         .where(DraftModel.id == draft_id)
     )
     draft = (await session.execute(stmt)).first()
-    if draft is not None:
-        return True
-    raise UnAuthorisedAccessError()
+    if draft is None:
+        raise UnAuthorisedAccessError()
 
 
 async def _comment_not_self_not_allowed(
     username: str, comment_id: int | str, session: AsyncSession
-) -> bool:
+):
     stmt = (
         select(CommentModel.id)
         .where(CommentModel.username == username)
         .where(CommentModel.id == comment_id)
     )
     comment = (await session.execute(stmt)).first()
-    if comment is not None:
-        return True
-    raise UnAuthorisedAccessError()
+    if comment is None:
+        raise UnAuthorisedAccessError()
+
+
+async def _unpublish_not_self_not_allowed(
+    username: str, post_id: int, session: AsyncSession
+):
+    stmt = (
+        select(PostModel.id)
+        .where(PostModel.username == username)
+        .where(PostModel.id == post_id)
+    )
+    post = (await session.execute(stmt)).first()
+    if post is None:
+        raise UnAuthorisedAccessError()
 
 
 _GRANT_MAPPER = {
@@ -64,6 +74,7 @@ _GRANT_MAPPER = {
     PermissionGrantsEnum.USER_NOT_SELF_NOT_ALLOWED: _user_not_self_not_allowed,
     PermissionGrantsEnum.DRAFT_NOT_SELF_NOT_ALLOWED: _draft_not_self_not_allowed,
     PermissionGrantsEnum.COMMENT_NOT_SELF_NOT_ALLOWED: _comment_not_self_not_allowed,
+    PermissionGrantsEnum.UNPUBLISH_NOT_SELF_NOT_ALLOWED: _unpublish_not_self_not_allowed,
 }
 
 ACLSetting: TypeAlias = dict[RoutesEnum, dict[UserRolesEnum, PermissionGrantsEnum]]
@@ -83,6 +94,10 @@ _ACL_MAPPER: ACLSetting = {
     RoutesEnum.DELETE_COMMENT: {
         UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
         UserRolesEnum.USER: PermissionGrantsEnum.COMMENT_NOT_SELF_NOT_ALLOWED,
+    },
+    RoutesEnum.UNPUBLISH_POST: {
+        UserRolesEnum.ADMIN: PermissionGrantsEnum.IS_ALLOWED,
+        UserRolesEnum.USER: PermissionGrantsEnum.UNPUBLISH_NOT_SELF_NOT_ALLOWED,
     },
 }
 

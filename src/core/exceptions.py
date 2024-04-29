@@ -25,8 +25,8 @@ class DraftNotFoundError(ResourceNotFoundError):
 
 
 class PostNotFoundError(ResourceNotFoundError):
-    def __init__(self, link):
-        self.message = f"<Post:{link!r} is not found!"
+    def __init__(self, link_or_id):
+        self.message = f"<Post:{link_or_id!r} is not found!"
 
 
 class CommentNotFoundError(ResourceNotFoundError):

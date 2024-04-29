@@ -42,7 +42,7 @@ async def get_current_username_with_access(
         raise ForbiddenError("Invalid Header")
 
     access_token = request.cookies.get("Access-Token")
-    if not access_token:
+    if access_token is None:
         raise ForbiddenError("Access-Token is not provided")
 
     access_token = decode_access_token(access_token)
@@ -51,6 +51,25 @@ async def get_current_username_with_access(
         CredentialsError()
 
     return access_token.username
+
+
+async def get_tokens_from_cookies(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
+):
+    if credentials.scheme != "Bearer":
+        raise ForbiddenError("Invalid Header")
+
+    access_token = request.cookies.get("Access-Token")
+    if access_token is None:
+        raise ForbiddenError("Access-Token is not provided")
+
+    access_token_d = decode_access_token(access_token)
+    csrf_token_d = decode_csrf_token(credentials.credentials)
+    if csrf_token_d.access_token != access_token_d:
+        CredentialsError()
+
+    return access_token, credentials.credentials
 
 
 async def get_current_user_from_db(

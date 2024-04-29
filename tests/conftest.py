@@ -83,7 +83,7 @@ class BaseTest:
 
 users_basic_url = base_url + f"{APIPrefixesEnum.USERS.value}"
 drafts_basic_url = base_url + f"{APIPrefixesEnum.DRAFTS.value}"
-post_basic_url = base_url + f"{APIPrefixesEnum.POSTS.value}"
+posts_basic_url = base_url + f"{APIPrefixesEnum.POSTS.value}"
 comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
 
 draft_data = {"title": "title", "body": "body"}

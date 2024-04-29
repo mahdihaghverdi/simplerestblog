@@ -285,6 +285,7 @@ Frameworks and technologies used in _Shortify_
 
 ## Roadmap
 - [ ] Implement a route to `unpublish` a post
+- [ ] Implement a route to `delete` a post
 - [ ] Use [Redis] for page caching
 - [ ] Introduce likes in _SRB_
 - [ ] Implement following and follower machnism

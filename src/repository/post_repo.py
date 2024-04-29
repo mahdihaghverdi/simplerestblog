@@ -7,6 +7,7 @@ from src.core.exceptions import (
 )
 from src.core.schemas import PostSchema, LittlePostSchema
 from src.repository import BaseRepo
+from src.repository.draft_repo import DraftRepo
 from src.repository.models import (
     DraftModel,
     PostModel,
@@ -101,3 +102,15 @@ class PostRepo(BaseRepo):
 
         posts = await self.execute_mappings_fetchall(stmt)
         return [LittlePostSchema(**p) for p in posts]
+
+    async def unpublish(self, post_id: int) -> int:
+        draft_repo = DraftRepo(self.session)
+
+        post = (
+            await self.session.execute(select(self.model).where(self.model.id == post_id))
+        ).scalar_one_or_none()
+        if post is None:
+            raise PostNotFoundError(post_id)
+        await self.session.delete(post)
+        await draft_repo.unpublish(post.draft_id)
+        return post.draft_id

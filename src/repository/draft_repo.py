@@ -106,6 +106,12 @@ class DraftRepo(BaseRepo):
             return DraftSchema(**draft)
         raise ResourceNotFoundError("Draft is not Found!")
 
+    async def unpublish(self, draft_id):
+        stmt = (
+            update(self.model).where(self.model.id == draft_id).values(is_published=False)
+        )
+        await self.session.execute(stmt)
+
     def _select_all_columns(self) -> Select:
         return select(
             self.model.id,
