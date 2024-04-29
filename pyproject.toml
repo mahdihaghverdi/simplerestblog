@@ -32,6 +32,13 @@ pytest-cov = "^4.1.0"
 line-length = 90
 lint.ignore = ["E711", "D100", "D101", "D102", "D103", "D105", "T201", "ANN101"]
 
+[tool.coverage.report]
+exclude_also = [
+    'def __repr__',
+    'if __name__ == .__main__.:',
+    'import'
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -41,7 +41,7 @@ ltree:
   docker exec -it testdatabase psql -U postgres -c "create extension if not exists ltree;"
 
 test:
-  pytest --no-header tests -v
+  pytest --no-header tests -v --disable-warnings
 
 test-with-cov:
-  pytest --durations=10 --no-header --cov=src --cov-report=html --cov-report=term-missing tests -v
+  pytest --durations=10 --no-header --cov=src --cov-report=html --cov-report=term-missing tests -v --disable-warnings
