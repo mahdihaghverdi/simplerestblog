@@ -89,7 +89,8 @@ comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
 draft_data = {"title": "title", "body": "body"}
 
 
-def create_draft(client, headers, cookies):
+def create_draft(client, headers, cookies, title="title"):
+    draft_data["title"] = title
     draft_id = client.post(
         f"{drafts_basic_url}/", headers=headers, cookies=cookies, json=draft_data
     ).json()["id"]

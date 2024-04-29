@@ -1,31 +1,17 @@
 from src.core.config import settings
 from src.core.enums import APIPrefixesEnum
+from tests.conftest import BaseTest, create_draft, create_post
+
+bt = BaseTest()
 
 
-def test_get_posts(client, mahdi_auth_headers):
-    draft_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/",
-        json={"title": "title", "body": "body"},
-        headers=mahdi_auth_headers,
-    ).json()["id"]
+def test_get_posts(client, refreshed_mahdi):
+    h, c = bt.headers_cookies_tuple(refreshed_mahdi)
 
-    draft_id2 = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/",
-        json={"title": "title2", "body": "body"},
-        headers=mahdi_auth_headers,
-    ).json()["id"]
-
-    client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
-        json={"tags": ["tag1", "tag2"], "slug": "slug"},
-        headers=mahdi_auth_headers,
-    )
-
-    client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id2}",
-        json={"tags": ["tag1", "tag2"], "slug": "slug"},
-        headers=mahdi_auth_headers,
-    )
+    draft_id = create_draft(client, h, c)
+    draft_id2 = create_draft(client, h, c, "title2")
+    create_post(client, h, c, draft_id)
+    create_post(client, h, c, draft_id2)
 
     response = client.get(f"{settings.PREFIX}/{APIPrefixesEnum.POSTS.value}/mahdi")
     assert response.status_code == 200, response.text
