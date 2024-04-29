@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
 
-from src.core.config import settings
-from src.core.enums import APIPrefixesEnum
-from tests import BaseTest
-from tests import base_url
-
-draft_data = {"title": "title", "body": "body"}
-
-users_basic_url = base_url + f"{APIPrefixesEnum.USERS.value}"
-drafts_basic_url = base_url + f"{APIPrefixesEnum.DRAFTS.value}"
-posts_basic_url = base_url + f"{APIPrefixesEnum.POSTS.value}"
-comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
+from tests.conftest import (
+    BaseTest,
+    users_basic_url,
+    drafts_basic_url,
+    create_draft,
+    draft_data,
+    create_post,
+    create_comment,
+    comments_basic_url,
+)
 
 
 class PermissionABC(ABC):
@@ -70,13 +69,6 @@ class TestGetByUsername(PermissionABC, BaseTest):
             f"{users_basic_url}/admin", **self.headers_cookies(refreshed_mahdi)
         )
         assert response.status_code == 401, response.text
-
-
-def create_draft(client, headers, cookies):
-    draft_id = client.post(
-        f"{drafts_basic_url}/", headers=headers, cookies=cookies, json=draft_data
-    ).json()["id"]
-    return draft_id
 
 
 class TestGetOneDraft(PermissionABC, BaseTest):
@@ -188,26 +180,6 @@ class TestGetAllDrafts(PermissionABC, BaseTest):
 
         response = client.get(url, headers=headers, cookies=cookies)
         assert response.status_code == 401, response.text
-
-
-def create_post(client, headers, cookies, draft_id):
-    post_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.DRAFTS.value}/publish/{draft_id}",
-        json={"tags": ["tag1", "tag2"], "slug": "slug"},
-        headers=headers,
-        cookies=cookies,
-    ).json()["id"]
-    return post_id
-
-
-def create_comment(client, headers, cookies, post_id):
-    comment_id = client.post(
-        f"{settings.PREFIX}/{APIPrefixesEnum.COMMENTS.value}/{post_id}",
-        json={"comment": "comment"},
-        headers=headers,
-        cookies=cookies,
-    ).json()["id"]
-    return comment_id
 
 
 class TestDeleteComment(PermissionABC, BaseTest):

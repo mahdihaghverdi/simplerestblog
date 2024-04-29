@@ -5,13 +5,13 @@ import pytest
 from pyotp import totp, random_base32
 from sqlalchemy import select, insert
 
+from src.core.config import settings
 from src.core.enums import APIPrefixesEnum
 from src.core.security import hash_password
 from src.repository.models import UserModel
-from tests import base_url
 from tests.shared.database import ASessionMock
 
-base_url = base_url + f"{APIPrefixesEnum.AUTH.value}"
+base_url = f"{settings.PREFIX}/{APIPrefixesEnum.AUTH.value}"
 
 username = "mahdi"
 password = "12345678"

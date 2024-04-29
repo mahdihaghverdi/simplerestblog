@@ -47,6 +47,75 @@ def client():
     asyncio.run(drop_all())
 
 
+base_url = f"{settings.PREFIX}/"
+
+
+class BaseTest:
+    url: str
+
+    @staticmethod
+    def extract_error_message(data):
+        return data["error"], data.get("details")
+
+    @staticmethod
+    def make_auth_headers(csrf_token):
+        return {"Authorization": f"Bearer {csrf_token}"}
+
+    @staticmethod
+    def make_auth_cookies(refresh_token, access_token=None):
+        base = {"Refresh-Token": refresh_token}
+        if access_token:
+            base["Access-Token"] = access_token
+            return base
+        return base
+
+    def headers_cookies(self, refreshed_namedtuple) -> dict[str, dict[str, str]]:
+        headers = self.make_auth_headers(refreshed_namedtuple.csrf_token)
+        cookies = self.make_auth_cookies(
+            refreshed_namedtuple.refresh_token, refreshed_namedtuple.access_token
+        )
+        return {"headers": headers, "cookies": cookies}
+
+    def headers_cookies_tuple(self, refreshed_namedtuple):
+        _ = self.headers_cookies(refreshed_namedtuple)
+        return _["headers"], _["cookies"]
+
+
+users_basic_url = base_url + f"{APIPrefixesEnum.USERS.value}"
+drafts_basic_url = base_url + f"{APIPrefixesEnum.DRAFTS.value}"
+post_basic_url = base_url + f"{APIPrefixesEnum.POSTS.value}"
+comments_basic_url = base_url + f"{APIPrefixesEnum.COMMENTS.value}"
+
+draft_data = {"title": "title", "body": "body"}
+
+
+def create_draft(client, headers, cookies):
+    draft_id = client.post(
+        f"{drafts_basic_url}/", headers=headers, cookies=cookies, json=draft_data
+    ).json()["id"]
+    return draft_id
+
+
+def create_post(client, headers, cookies, draft_id):
+    post_id = client.post(
+        f"{drafts_basic_url}/publish/{draft_id}",
+        json={"tags": ["tag1", "tag2"], "slug": "slug"},
+        headers=headers,
+        cookies=cookies,
+    ).json()["id"]
+    return post_id
+
+
+def create_comment(client, headers, cookies, post_id, comment="comment"):
+    comment_id = client.post(
+        f"{comments_basic_url}/{post_id}",
+        json={"comment": comment},
+        headers=headers,
+        cookies=cookies,
+    ).json()["id"]
+    return comment_id
+
+
 @pytest.fixture
 def post_id_fixture(client, mahdi_auth_headers):
     draft_id = client.post(

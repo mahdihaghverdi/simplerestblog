@@ -12,7 +12,7 @@ from src.core.security import decode_refresh_token, decode_csrf_token, decode_ac
 from src.core.utils import sha256_username
 from tests.shared.redis_db import get_redis_client_mock
 from .conftest import base_url, simple_signup_data, username, signup_data, login_data
-from .. import BaseTest
+from ..conftest import BaseTest
 
 
 class RefreshTokenMixin:
