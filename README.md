@@ -284,7 +284,7 @@ Frameworks and technologies used in _Shortify_
 - [ruff] (Linter & Formatter)
 
 ## Roadmap
-- [ ] Implement a route to `unpublish` a post
+- [x] Implement a route to `unpublish` a post
 - [ ] Implement a route to `delete` a post
 - [ ] Use [Redis] for page caching
 - [ ] Introduce likes in _SRB_
